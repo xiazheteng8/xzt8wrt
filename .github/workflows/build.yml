@@ -1,6 +1,15 @@
 name: Build xzt8wrt
 on:
   workflow_dispatch:
+    inputs:
+      profile:
+        description: Build profile
+        type: choice
+        default: both
+        options: [both, full, lite]
+  schedule:
+    # Sunday 03:00 Asia/Shanghai = Saturday 19:00 UTC.
+    - cron: '0 19 * * 6'
 permissions:
   contents: read
 concurrency:
@@ -8,6 +17,10 @@ concurrency:
   cancel-in-progress: false
 jobs:
   firmware:
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: ${{ fromJSON(github.event_name == 'workflow_dispatch' && inputs.profile != 'both' && format('["{0}"]', inputs.profile) || '["full","lite"]') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 360
     steps:
@@ -24,18 +37,20 @@ jobs:
         run: bash build.sh
         env:
           JOBS: '2'
+          PROFILE: ${{ matrix.profile }}
       - name: Upload firmware and configuration
         uses: actions/upload-artifact@v4
         with:
-          name: xzt8wrt-25.12.2-x86-64
-          path: artifacts/
+          name: xzt8wrt-25.12.2-x86-64-${{ matrix.profile }}
+          path: artifacts/${{ matrix.profile }}/
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 14
       - name: Upload diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: xzt8wrt-build-diagnostics
+          name: xzt8wrt-build-diagnostics-${{ matrix.profile }}
           path: |
             immortalwrt/.config
             immortalwrt/logs/
