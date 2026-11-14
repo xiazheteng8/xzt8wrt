@@ -1,41 +1,417 @@
-# xzt8wrt
+# 🛠️ xzt8wrt 固件构建教程｜Fork 后，点几下就能云端编译
 
-ImmortalWrt 25.12.2，x86_64 高大全版 / 精简版。源码固定至官方发布提交 `4fc16f2985a358bd43bb522e43f05395fcbd6ed5`，feeds 使用该版本自带的固定提交。
+欢迎使用 **xzt8wrt**！这是一个基于 **ImmortalWrt** 的固件构建项目，适用于部分 x86 软路由、ARM 软路由和 ARM 无线路由器。
 
-## 构建
+即使你不会写代码，也可以照着本页，把项目复制到自己的 GitHub 账号里，然后使用 GitHub 免费提供给公开仓库的标准云端运行器编译。实际可用额度和政策以你的 GitHub 账号为准。
 
-进入 GitHub Actions → Build xzt8wrt → Run workflow。选择 `both`（双版本）、`full`（高大全）或 `lite`（精简）。成功后分别下载 `xzt8wrt-25.12.2-x86-64-full` / `xzt8wrt-25.12.2-x86-64-lite` artifact。每周日北京时间 03:00 自动构建双版本（UTC 周六 19:00；GitHub 定时任务可能延迟）。完整源码编译可能需要数小时；工作流失败时查看日志和 diagnostics，不能把工程包当成固件刷入。
+> 💡 **代码保存在 GitHub，编译也在 GitHub 上进行。启动构建后可以关闭网页，也可以关闭电脑，不会中断云端编译。**
+>
+> 📌 本仓库提供的是构建脚本和配置，不是可以直接刷入路由器的固件。要先完成下面的编译步骤，再下载生成的镜像。
+>
+> 🧪 新增设备目前是“已加入构建配置、待云端编译与实机验证”的状态，不代表已经在每台机器上测试通过。
 
-也可在已安装 OpenWrt 编译依赖的 Ubuntu 24.04 上执行 `PROFILE=full bash build.sh` 或 `PROFILE=lite bash build.sh`。建议至少 8 GB 内存和 60 GB 可用磁盘。
+---
 
-## 配置
+## 📖 先用一分钟认识几个词
 
-- 中文 LuCI / HTTPS，SSH 登录横幅和主机名为 xzt8wrt。
-- Intel igc/igb/e1000e、Realtek r8169、USB RTL8152/AX88179、VMware vmxnet3；VirtIO 使用目标默认内核配置。通用不代表支持每一块网卡，无线驱动未盲目全选。
-- PassWall、WireGuard、OpenVPN、ZeroTier、Docker、mwan3、PBR、SQM、DDNS、UPnP、SmartDNS、Adblock。
-- Samba4、Aria2、磁盘管理、USB 存储、ext4/exFAT/NTFS3、网络与硬盘诊断工具。
-- 两版代理界面均仅保留 PassWall，不安装 OpenClash；未内置订阅、节点或账号。
-- 两版均包含 WOL、DDNS-GO、中文 LuCI / HTTPS 和常见 x86 网卡驱动。精简版以 Xray 为代理核心，去除 NAS、Docker、下载及额外 VPN 等组件。
-- 高大全版额外包括 AdGuard Home、FRP 客户端/服务端、Tailscale、Syncthing、Transmission、rclone、NFS、MiniDLNA、文件管理、定时唤醒、流量统计、banIP、证书管理等；完整选择见 `profiles/full.config`，不包含所有互斥或设备专用软件包。
-- 高大全版对 `files/etc/uci-defaults/99-xzt8wrt` 列明的扩展服务设置开机自启；仍保留软件包原有服务配置。需要账号、订阅、节点、共享目录或端口设置的服务须配置后才能工作。AdGuard Home / SmartDNS 等 DNS 服务需手动协调端口；不会同时强制接管 DNS。精简版扩展服务默认不自启。
-- 高大全版根分区 2048 MiB，精简版 512 MiB，内核分区 64 MiB；生成 ext4 / squashfs，以及 BIOS / UEFI 两种启动镜像。
+| 页面上的词 | 你可以这样理解 |
+| --- | --- |
+| GitHub | 保存代码、运行云端编译的网站 |
+| 仓库 / Repository | 这个项目在 GitHub 上的文件夹 |
+| Fork | 把项目复制一份，放到你自己的账号下 |
+| Actions | GitHub 提供的自动运行任务功能，本项目用它编译固件 |
+| Workflow | 一套自动执行的步骤，本项目名叫 `Build xzt8wrt` |
+| Run workflow | 手动开始一次构建 |
+| Artifact / Artifacts | 构建完成后可下载的文件包 |
+| 固件 / 镜像 | 最后写入路由器或启动盘的系统文件 |
+| stock / ubootmod | 两种不同的引导和分区布局，不能混用镜像 |
 
-## 镜像选择
+**整个过程：** 登录 GitHub → Fork 项目 → 启用 Actions → 选择设备与版本 → 开始构建 → 等待完成 → 下载并核对固件。
 
-- UEFI：`generic-squashfs-combined-efi.img.gz`，常规首选。
-- 传统 BIOS：`generic-squashfs-combined.img.gz`。
-- ext4：适合明确需要可写根分区的用户，恢复出厂行为与 squashfs 不同。
+---
 
-这是 64 位 x86 固件，不适用于 ARM、普通家用路由器或 32 位老机器。安装前备份磁盘和配置，写入整盘镜像会覆盖目标盘。先核对 SHA256。Secure Boot 通常需要关闭。
+## ✅ 第一步：准备好这些东西
 
-LAN 地址、端口划分及登录策略继承官方 x86 目标默认设置，首次安装建议隔离接线、确认接口并设置 root 密码。不要凭网口外观猜 LAN/WAN。升级到官方固件不会保留这套自定义包和品牌定制；后续升级应继续使用本工程构建的镜像。
+- 一个可以登录的 [GitHub 账号](https://github.com/)。没有账号，先点击网站的 **Sign up** 注册。
+- 能正常访问 GitHub 的浏览器。新手建议使用电脑浏览器；手机页面的按钮位置可能不同。
+- 确认自己的设备**品牌、完整型号、硬件版本、闪存版本和现有引导布局**。例如“红米 AX6000”和“小米 AX6000”不能当成同一台机器。
+- 给构建留出时间：完整源码编译通常需要数小时，首次构建不一定一次成功。
 
-## 验证边界
+**不需要**在自己电脑上安装 Linux、编译器或下载整个 ImmortalWrt 源码，也不需要把账号密码、订阅地址或节点上传到公开仓库。
 
-本工程包含 make defconfig 后的严格选项检查，若软件包不存在或依赖导致选项丢失即停止。成功的 Actions 编译只证明构建通过；仍需在你的硬件或虚拟机上验证启动、网卡识别、存储及路由性能。
+---
 
-## 项目状态
+## 🍴 第二步：Fork 到你自己的仓库
 
-双版本、每周构建和服务启用策略从下一次构建生效，不改变正在运行的首次构建。
-ARM 仍处于计划阶段，具体型号与目标配置尚未确定；当前只生成 x86_64 镜像。
-配置检查及编译验证以对应 Actions 结果为准，配置文件中选中不代表固件已经构建成功。
+1. 登录 GitHub 后，打开本项目：[xiazheteng8/xzt8wrt](https://github.com/xiazheteng8/xzt8wrt)。
+2. 在页面右上方找到 **Fork**，点击它。也可以直接打开 [Fork 页面](https://github.com/xiazheteng8/xzt8wrt/fork)。
+3. 在新页面里：
+   - **Owner**：选择你自己的 GitHub 用户名。
+   - **Repository name**：可以保持 `xzt8wrt`，也可以起一个自己喜欢的名字。
+   - **Copy the main branch only**：一般保持默认即可。
+4. 点击 **Create fork**，等待复制完成。
+5. 看一眼地址栏：应变成 `https://github.com/你的用户名/你的仓库名`。
+
+> ✅ 后面的操作都在**你自己的仓库**里进行。不要回到原作者仓库找构建结果，否则可能下载到别人的任务产物。
+
+---
+
+## ⚙️ 第三步：启用 GitHub Actions
+
+1. 打开你自己 Fork 出来的仓库。
+2. 点击上方的 **Actions** 标签。
+3. 如果出现提示按钮 **I understand my workflows, go ahead and enable them**，点击启用。
+4. 在左侧找到并点击 **Build xzt8wrt**。
+
+如果看不到工作流，先确认 Fork 的文件里有 `.github/workflows/build.yml`，然后刷新页面。
+
+如果提示仓库不允许 Actions，进入 **Settings → Actions → General**，按页面提示允许本项目使用的 Actions。普通个人公开仓库一般不需要额外设置。
+
+> 🔐 本项目使用默认的**只读仓库权限**，无需新建 PAT / Token，也不需要在 Secrets 里填写 GitHub 密码、代理账号或订阅。
+
+---
+
+## 🖱️ 第四步：手动开始一次构建
+
+在 **Actions → 左侧 Build xzt8wrt** 页面：
+
+1. 找到右侧的 **Run workflow** 按钮，点击展开。
+2. **Use workflow from** 保持 `main`。
+3. 根据下面两张表选择平台和版本。
+4. 最后点击弹出框里的绿色 **Run workflow**。
+5. 等待任务列表出现新的一条 `Build xzt8wrt`。没有马上出现，可以稍等后刷新。
+
+### 🧩 `platform`：你要给哪一类机器编译？
+
+| 选择 | 适合什么设备 | 不确定时怎么选 |
+| --- | --- | --- |
+| `x86` | Intel / AMD 64 位软路由、迷你主机、虚拟机 | N100 等 x86 机器选它；仍需确认自己的机器是 x86_64 |
+| `rockchip` | NanoPi R2S / R4S / R5S / R6S、FastRhino R66S / R68S | 这些 ARM 软路由选它 |
+| `filogic` | 下文列出的 TR3000、红米 AX6000、TUF-AX6000、GL-MT3000 / MT6000 | 只支持下文列明的准确型号与布局 |
+| `all` | 所有已配置平台 | 会生成更多文件、耗时更长；只给自己用，建议选具体平台 |
+
+选择 `rockchip` 或 `filogic` 后，会为该组中已配置的每个型号分别生成文件；下载后仍须挑选与你的设备对应的那一个。
+
+### 📦 `profile`：你想要哪个版本？
+
+| 选择 | 中文含义 | 建议 |
+| --- | --- | --- |
+| `lite` | 精简版 | 新手、硬路由、只需要常用功能时，建议先选它 |
+| `full` | 高大全版 | 需要 Docker、NAS、下载、更多 VPN 等功能的 x86 / Rockchip 设备 |
+| `both` | 两版都编译 | 想比较两个版本时选择；Filogic 只生成精简版 |
+
+**Filogic 不支持 `full` 单独构建。** 这类硬路由的闪存和分区容量有限，不宜直接塞入高大全版。选择 `platform=filogic` 时，请选 `lite` 或 `both`。
+
+### 🧪 `configure_only`：只检查配置，要勾选吗？
+
+- **想生成固件：不要勾选。**
+- 想先检查源码、机型和插件选项能否正确匹配：可以勾选。
+- 只检查配置的任务即使全部绿色，也**不会生成固件**，只会上传诊断配置。
+
+### 📝 几个可以直接照选的例子
+
+| 你的需求 | `platform` | `profile` | `configure_only` |
+| --- | --- | --- | --- |
+| 给 R2S / R4S / R66S / R68S 做精简固件 | `rockchip` | `lite` | 不勾选 |
+| 给这些 ARM 软路由做高大全固件 | `rockchip` | `full` | 不勾选 |
+| 给红米 AX6000 或 TR3000 做固件 | `filogic` | `lite` | 不勾选 |
+| 给 x86 软路由做两个版本 | `x86` | `both` | 不勾选 |
+| 只想先检查所有配置 | `all` | `both` | 勾选 |
+
+---
+
+## ⏳ 第五步：看懂构建状态，耐心等待
+
+点击刚出现的任务，进入运行详情页。
+
+| 状态 | 含义 | 你需要做什么 |
+| --- | --- | --- |
+| `Queued` / `Pending` | 正在排队，尚未开始或等待前一轮任务 | 等待即可，不用连续重复点击构建 |
+| `In progress` | 正在运行 | 可以关闭网页或电脑，稍后再回来查看 |
+| 绿色 ✅ / `Success` | 任务成功 | 进入下一步下载；注意是否只检查了配置 |
+| 红色 ❌ / `Failure` | 任务失败 | 查看日志，不要把失败任务的诊断包当固件 |
+| `Cancelled` | 任务被取消 | 需要时重新开始构建 |
+
+每轮任务先执行 `prepare`，查找最新官方稳定版并确定本轮统一使用的源码提交。之后最多同时编译两个组合，其余组合会排队。
+
+全平台双版本共有 **5 个组合**：`x86-full`、`x86-lite`、`rockchip-full`、`rockchip-lite`、`filogic-lite`。其中一组失败不一定代表其他组也失败，下载时要看你准备使用的那一组是否成功。
+
+> ☕ “运行了很久”不一定是卡住。编译大型软件包可能长时间没有明显进度变化。可以点开任务中的步骤查看日志，避免反复创建重复构建。
+
+---
+
+## 📥 第六步：在哪里下载固件？
+
+1. 进入你自己仓库的 **Actions**。
+2. 点击你要下载的那次运行。
+3. 确认要用的平台任务已经绿色成功。
+4. 回到这次运行的总览页，往下找到 **Artifacts**。
+5. 点击对应的文件包下载，通常会得到一个 `.zip` 压缩包。
+6. 在电脑上解压，再从里面选择与你设备匹配的镜像。
+
+文件包名称示例：
+
+```text
+xzt8wrt-25.12.2-x86-full
+xzt8wrt-25.12.2-rockchip-lite
+xzt8wrt-25.12.2-filogic-lite
+```
+
+上面的版本号只是示例，**实际名称会随官方最新稳定版变化**。
+
+- `full` 是高大全版，`lite` 是精简版。
+- 文件默认保留 **14 天**，过期后可以重新编译。
+- 请保持 GitHub 登录状态；未登录时可能无法下载 Actions 的 Artifacts。
+- 本项目把产物上传到 **Actions → Artifacts**，不是自动发布到仓库的 **Releases** 页面。
+- `xzt8wrt-diagnostics-...` 是日志 / 配置诊断包，**不能刷入路由器**。
+
+---
+
+## 🧭 第七步：从文件堆里选对自己的固件
+
+### 💻 x86 软路由 / 虚拟机
+
+| 文件名结尾 | 用途 |
+| --- | --- |
+| `generic-squashfs-combined-efi.img.gz` | UEFI 启动的完整磁盘镜像，常规选择 |
+| `generic-squashfs-combined.img.gz` | 传统 BIOS 启动的完整磁盘镜像 |
+| 带 `ext4` 的镜像 | 可写根分区方案，恢复出厂行为与 squashfs 不同，明确需要时再选 |
+
+文件名前面还会带有 ImmortalWrt 版本和平台信息。`.gz` 是压缩格式，是否需要先解压取决于你使用的写盘工具。写盘会覆盖所选磁盘，务必核对目标盘。
+
+### 🍓 ARM 软路由
+
+选择文件名包含**准确设备名**的 `sysupgrade.img.gz`。例如：
+
+```text
+...friendlyarm_nanopi-r2s-squashfs-sysupgrade.img.gz
+...friendlyarm_nanopi-r4s-squashfs-sysupgrade.img.gz
+...lunzn_fastrhino-r66s-squashfs-sysupgrade.img.gz
+...lunzn_fastrhino-r68s-squashfs-sysupgrade.img.gz
+```
+
+不要把 R66S 的镜像刷到 R68S，也不要把 NanoPi R6S 与 FastRhino R66S / R68S 混淆。首次写入 SD 卡 / eMMC 和已有系统中的升级，操作流程不同，请按设备说明进行。
+
+### 📡 ARM 无线路由器 / 硬路由
+
+这类设备对**型号、硬件版本和引导布局**要求更严格：
+
+| 名称 / 文件类型 | 要理解的含义 |
+| --- | --- |
+| `stock` | 对应原厂分区 / 引导布局 |
+| `ubootmod` | 对应 OpenWrt U-Boot 布局，前提是设备已完成对应改造 |
+| `sysupgrade` | 通常用于已经运行兼容 OpenWrt / ImmortalWrt 系统后的升级 |
+| `factory` | 某些设备用于从原厂系统迁移的镜像；不是每台设备都有，也不能一概直接刷 |
+| `initramfs` / `recovery` | 通常用于临时启动、安装或恢复，不应当成普通升级镜像随意刷入 |
+
+> ⚠️ **编译成功不等于可以随便刷。** 本项目不替你自动改分区、不刷 U-Boot，也不提供一种适合所有机器的通用刷机步骤。请先核实具体型号的官方安装说明，备份原系统和配置后再操作。不要看到名称里有“AX6000”就直接下载。
+
+---
+
+## 🔎 支持哪些具体设备？
+
+以下是已经加入构建配置的目标，新增机型仍需云端构建和实机验证。
+
+| 平台 | 品牌 / 完整型号 / 布局 | 可构建版本 |
+| --- | --- | --- |
+| x86 / 64 | Intel / AMD x86_64 通用 | 高大全 + 精简 |
+| rockchip / armv8 | FriendlyARM NanoPi **R2S、R4S、R5S、R6S** | 高大全 + 精简 |
+| rockchip / armv8 | Lunzn FastRhino **R66S、R68S** | 高大全 + 精简 |
+| mediatek / filogic | Cudy **TR3000 v1** | 精简 |
+| mediatek / filogic | Cudy **TR3000 256MB v1** | 精简 |
+| mediatek / filogic | Cudy **TR3000 v1，OpenWrt U-Boot 布局** | 精简 |
+| mediatek / filogic | 小米 **红米 Redmi Router AX6000，stock 布局** | 精简 |
+| mediatek / filogic | 小米 **红米 Redmi Router AX6000，ubootmod 布局** | 精简 |
+| mediatek / filogic | **ASUS TUF-AX6000** | 精简 |
+| mediatek / filogic | **GL.iNet GL-MT3000、GL-MT6000** | 精简 |
+
+这些设备已与官方稳定版的 [Rockchip 设备定义](https://github.com/immortalwrt/immortalwrt/blob/v25.12.2/target/linux/rockchip/image/armv8.mk)和 [Filogic 设备定义](https://github.com/immortalwrt/immortalwrt/blob/v25.12.2/target/linux/mediatek/image/filogic.mk)核对，设备清单在 `build-support.py` 的 `TARGETS` 中。
+
+**请特别注意：**
+
+- R2S 不等于 R2S Plus，R4S 不等于 R4SE / Enterprise。
+- 红米 AX6000 不等于小米 Mi Router AX6000。
+- TR3000 的不同闪存版本不能凭外观判断，更不能把 stock 和 ubootmod 固件混刷。
+- 未列出的设备不代表可以使用“看起来很像”的其他型号镜像。
+
+ARM 设备的网卡、Wi-Fi、固件与启动组件继承官方设备配置，每个设备使用独立根文件系统，不会把 x86 的网卡驱动直接套用到 ARM 上。
+
+---
+
+## 📦 高大全版和精简版有什么区别？
+
+| 项目 | 精简版 `lite` | 高大全版 `full` |
+| --- | --- | --- |
+| 中文 LuCI / HTTPS | ✅ | ✅ |
+| SSH 横幅和主机名 `xzt8wrt` | ✅ | ✅ |
+| PassWall | ✅，以 Xray 为核心 | ✅，包含更多可选协议组件 |
+| WOL 网络唤醒 | ✅ | ✅ |
+| DDNS-GO | ✅ | ✅ |
+| Docker、NAS、下载等扩展 | 不安装 | ✅ |
+| 额外 VPN、统计和管理插件 | 以必要功能为主 | 更丰富 |
+| 扩展服务开机自启 | 默认关闭 | 对首次启动脚本列明的服务启用 |
+| x86 / Rockchip 根分区 | 512 MiB | 2048 MiB |
+| 闪存受限的 Filogic 硬路由 | ✅ | 暂不提供 |
+
+高大全版还选择了 WireGuard、OpenVPN、ZeroTier、Tailscale、Docker、mwan3、PBR、SQM、DDNS、UPnP、SmartDNS、Adblock、AdGuard Home、Samba4、NFS、Aria2、Transmission、Syncthing、rclone、FRP、文件管理、磁盘管理和统计诊断等，完整清单见 `profiles/full.config`。
+
+> 💡 两版都只保留 **PassWall** 代理界面，不安装 OpenClash。项目不内置订阅、节点、账号或密码。插件“安装了”不等于“配置好了”：PassWall 需要自己的节点，DDNS-GO 需要自己的域名与服务商配置，WOL 需要目标设备支持并启用唤醒。
+>
+> ⚙️ 高大全版会把 `files/etc/uci-defaults/99-xzt8wrt` 列明的扩展服务设置为开机自启，但仍保留各软件包原有配置。SmartDNS / AdGuard Home 等 DNS 服务要自行协调端口。保留旧配置升级时，首次启动默认设置不保证重新应用。
+
+---
+
+## 🗓️ 每周自动编译：电脑不用开机
+
+默认安排在 **每周日北京时间凌晨 03:00**，自动构建全部已配置组合。
+
+Fork 后请先完成 Actions 启用，并确认 **Build xzt8wrt** 没有被禁用。GitHub 定时任务可能延迟；公开仓库长期没有活动时，定时任务可能自动停用，需要在 Actions 页面重新启用。详见 [GitHub 定时工作流说明](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule)。
+
+### 想换时间，怎么改？
+
+1. 进入自己仓库的 **Code** 页面。
+2. 依次打开 `.github` → `workflows` → `build.yml`。
+3. 点击铅笔形状的编辑按钮。
+4. 找到 `cron: '0 19 * * 6'`，修改成需要的时间。
+5. 点击 **Commit changes**，按页面提示提交到 `main`。
+
+GitHub 使用 UTC 时间，北京时间比 UTC 快 8 小时：**北京时间周日 03:00 = UTC 周六 19:00**。不要只改小时却忘记日期会跨天。新手如果不熟悉 cron，建议先保持默认。
+
+---
+
+## 🆕 “自动跟随最新稳定版”是什么意思？
+
+每次构建都会从 [ImmortalWrt 官方下载页](https://downloads.immortalwrt.org/)查找最新的**正式稳定版**，再解析对应 Git 标签和源码提交。本轮所有平台使用同一份源码，feeds 使用该版本自带的固定提交。
+
+- 官方发布了更新的稳定版：下一轮构建会自动跟随。
+- 官方还没发布新稳定版：重新编译现有最新稳定版。
+- 不跟随 `master` / `SNAPSHOT` 开发版。
+- 不单独替换成最新主线 Linux 内核，内核和驱动随官方稳定版。
+- 若新版把插件改名、移除或改变依赖，严格检查可能报错，需要修复配置后重建。
+
+想知道自己拿到的到底是什么版本，可以查看 Actions 的 `prepare` 摘要，或下载包中的：
+
+| 文件 | 记录的内容 |
+| --- | --- |
+| `source.json` | 本轮稳定版版本、标签和源码提交 |
+| `source-version.txt` | 实际源码提交 |
+| `feeds-version.txt` | 软件包源提交 |
+| `kernel-version.json` | 实际内核版本信息 |
+| `.config` | 编译实际使用的配置；部分系统默认隐藏以点开头的文件 |
+
+---
+
+## 🧾 下载后如何核对文件有没有损坏？
+
+产物带有校验清单 `xzt8wrt-sha256sums`。先把下载的 `.zip` **完整解压**，再在该目录运行相应命令。
+
+**Windows PowerShell：**
+
+```powershell
+Get-FileHash .\你的固件文件名 -Algorithm SHA256
+```
+
+将输出的 SHA256 与 `xzt8wrt-sha256sums` 中同名文件对应的值比较，大小写可以不同，内容必须一致。文件名有空格时请加引号。
+
+**macOS 终端：**
+
+```sh
+shasum -a 256 -c xzt8wrt-sha256sums
+```
+
+**Linux 终端：**
+
+```sh
+sha256sum -c xzt8wrt-sha256sums
+```
+
+出现不匹配时，先重新下载并完整解压，不要继续刷入。
+
+构建脚本还会检查每个已选择设备是否真的生成了可用镜像，以及镜像哈希是否匹配。某台设备因容量超限没有生成镜像时，任务会报错，不会把“有几个文件”当作全部构建成功。
+
+---
+
+## 🔄 如何更新自己 Fork 的工程？
+
+**源码自动跟随稳定版**，不等于你的 Fork 会自动获得本工程后续修改的教程、设备清单和工作流。
+
+同步工程的方法：
+
+1. 打开你自己仓库的 **Code** 页面。
+2. 找到 **Sync fork**。
+3. 点击 **Update branch**。
+4. 回到 **Actions**，按需重新构建。
+
+如果你修改过配置，先看清差异。出现冲突时不要随意覆盖自己的修改。构建使用的是启动任务时的工程提交，后续改文件不会改变已经运行中的那一轮。
+
+---
+
+## ❓ 新手常见问题
+
+### 1. 为什么找不到 Run workflow？
+
+确认是在**自己 Fork 的仓库**中，已经启用 Actions，并点开左侧 **Build xzt8wrt**。工作流文件需要在默认分支中。页面没更新时可以刷新。
+
+### 2. 已经点击开始，可以关电脑吗？
+
+可以。确认 Actions 列表已经出现新任务后，云端会继续执行。关闭浏览器不会取消任务。
+
+### 3. 为什么绿色成功了，却找不到固件？
+
+先检查是否勾选了 `configure_only`。勾选后只验证配置，不生成固件。也要进入**那次运行的总览页底部**找 Artifacts，不要到 Releases 里找。
+
+### 4. 为什么显示红色失败？
+
+点击失败的任务，展开红色步骤，尤其是 **Build or validate firmware configuration**。可下载 `xzt8wrt-diagnostics-平台-版本` 查看配置与日志。常见原因包括源码 / 软件包下载失败、插件选项变化、编译错误、磁盘不足或固件超出设备分区容量。应定位首个有效错误，再修改或重试。
+
+### 5. 下载包里文件很多，哪个可以刷？
+
+先看本页“第七步”，确认完整型号、版本与布局。`.config`、`.manifest`、`.json`、校验文件和 diagnostics 都不是刷机镜像。遇到不确定的 `factory` / `recovery` / `ubootmod` 文件，先查具体设备安装说明。
+
+### 6. 刷好后默认密码、IP、LAN / WAN 是什么？
+
+本工程设置主机名和横幅为 `xzt8wrt`，其余登录策略、LAN 地址与接口划分继承官方设备默认配置。不能把某台设备的地址或端口规则直接套用到所有机器。首次启动建议隔离接线，确认接口并设置 root 密码。
+
+### 7. 构建成功，是否代表设备一定能正常用？
+
+不是。成功只证明编译及产物检查通过，仍需实机验证启动、网卡、Wi-Fi、存储、代理与路由功能。升级前备份，避免在没有恢复手段的情况下直接更换正在承担重要网络任务的系统。
+
+### 8. 能不能添加其他插件或设备？
+
+可以修改配置，但设备必须有正确的目标和镜像定义，不能只改文件名。插件也要核对依赖和容量。新手先使用现有配置构建成功，再逐项修改，方便出错时定位原因。
+
+---
+
+## 🧑‍💻 进阶：修改插件或本地编译
+
+只想点网页构建的朋友可以跳过这一节。
+
+插件配置分为：
+
+- `seed.config`：两个版本共有的软件包。
+- `profiles/lite.config`：精简版配置。
+- `profiles/full.config`：高大全版配置。
+- `build-support.py`：平台、设备列表、分区选项、稳定版解析和产物检查。
+- `files/etc/uci-defaults/99-xzt8wrt`：主机名、语言与服务自启策略。
+
+添加软件包的常见格式：
+
+```text
+CONFIG_PACKAGE_软件包名=y
+```
+
+提交后建议先勾选 `configure_only` 检查。`make defconfig` 之后，如果请求的插件被依赖关系丢弃、设备选项失效或该插件不存在，工作流会失败并提示；不要无差别全选互斥插件、其他架构驱动或所有大型软件包。
+
+已经安装 OpenWrt 编译依赖的 **Linux** 环境，可执行：
+
+```sh
+PLATFORM=x86 PROFILE=lite bash build.sh
+PLATFORM=rockchip PROFILE=full bash build.sh
+PLATFORM=filogic PROFILE=lite bash build.sh
+# 只检查配置
+PREPARE_ONLY=1 PLATFORM=rockchip PROFILE=lite bash build.sh
+# 检查辅助逻辑
+python3 test-build-support.py
+```
+
+工作流使用 Ubuntu 24.04。完整构建建议至少 8 GB 内存和充足磁盘，多设备高大全版需要更多空间。更换源码版本或平台时应使用干净的源码目录，可以用 `SOURCE_DIR` 指向新目录。本地文件修改不会自动提交到 GitHub。

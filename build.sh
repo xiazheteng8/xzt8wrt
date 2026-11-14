@@ -3,31 +3,38 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 SOURCE="${SOURCE_DIR:-$ROOT/immortalwrt}"
 PROFILE="${PROFILE:-full}"
-case "$PROFILE" in full|lite) ;; *) echo "Unknown profile: $PROFILE" >&2; exit 2 ;; esac
-COMMIT=4fc16f2985a358bd43bb522e43f05395fcbd6ed5
+PLATFORM="${PLATFORM:-x86}"
+python3 "$ROOT/build-support.py" config --platform "$PLATFORM" --profile "$PROFILE" > "$ROOT/requested.config"
+if [[ -n "${SOURCE_REF:-}" && -n "${SOURCE_COMMIT:-}" && -n "${SOURCE_VERSION:-}" ]]; then
+  python3 -c 'import json,os; print(json.dumps({"ref":os.environ["SOURCE_REF"],"commit":os.environ["SOURCE_COMMIT"],"version":os.environ["SOURCE_VERSION"]}))' > "$ROOT/source.json"
+else
+  python3 "$ROOT/build-support.py" resolve > "$ROOT/source.json"
+fi
+REF="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["ref"])' "$ROOT/source.json")"
+COMMIT="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["commit"])' "$ROOT/source.json")"
+VERSION="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$ROOT/source.json")"
 if [[ ! -d "$SOURCE/.git" ]]; then
-  git clone --depth 1 --branch v25.12.2 https://github.com/immortalwrt/immortalwrt.git "$SOURCE"
+  git clone --depth 1 --branch "$REF" https://github.com/immortalwrt/immortalwrt.git "$SOURCE"
 fi
 cd "$SOURCE"
-[[ "$(git rev-parse HEAD)" == "$COMMIT" ]] || { echo 'Unexpected source commit'; exit 1; }
+[[ "$(git rev-parse HEAD)" == "$COMMIT" ]] || { echo "Source mismatch: use a fresh SOURCE_DIR for $REF" >&2; exit 1; }
 ./scripts/feeds update -a
 ./scripts/feeds install -a
-cat "$ROOT/seed.config" "$ROOT/profiles/$PROFILE.config" > .config
+cp "$ROOT/requested.config" .config
 cp .config requested.config
+cp "$ROOT/source.json" source.json
 make defconfig
 python3 "$ROOT/check-config.py" requested.config .config
 mkdir -p files/etc/uci-defaults
 cp -a "$ROOT/files/." files/
 chmod 0755 files/etc/uci-defaults/99-xzt8wrt
+printf '\n  xzt8wrt\n  ImmortalWrt %s / %s / %s\n\n' "$VERSION" "$PLATFORM" "$PROFILE" > files/etc/banner
 printf '%s\n' "$PROFILE" > files/etc/xzt8wrt-profile
 git rev-parse HEAD > source-version.txt
 ./scripts/feeds list -s > feeds-version.txt
+[[ "${PREPARE_ONLY:-0}" != 1 ]] || exit 0
 make download -j8
 make -j"${JOBS:-2}" BUILD_LOG=1 || make -j1 V=s BUILD_LOG=1
-ARTIFACTS="$ROOT/artifacts/$PROFILE"
-mkdir -p "$ARTIFACTS"
-find bin/targets/x86/64 -maxdepth 1 -type f -exec cp {} "$ARTIFACTS/" \;
-cp .config requested.config source-version.txt feeds-version.txt "$ARTIFACTS/"
-printf '%s\n' "$PROFILE" > "$ARTIFACTS/profile.txt"
-cd "$ARTIFACTS"
-sha256sum *.img.gz > xzt8wrt-sha256sums
+ARTIFACTS="$ROOT/artifacts/$PLATFORM-$PROFILE"
+rm -rf "$ARTIFACTS"
+python3 "$ROOT/build-support.py" collect --platform "$PLATFORM" --source "$SOURCE" --output "$ARTIFACTS"
