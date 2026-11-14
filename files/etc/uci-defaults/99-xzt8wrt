@@ -1,0 +1,10 @@
+#!/bin/sh
+uci set system.@system[0].hostname='xzt8wrt'
+uci set luci.main.lang='zh_cn'
+uci commit system
+uci commit luci
+# Extra services are present for configuration, not automatically exposed.
+for service in aria2 samba4 ttyd miniupnpd openvpn smartdns adblock sqm pbr ddns openclash passwall dockerd zerotier mwan3; do
+    [ ! -x "/etc/init.d/$service" ] || "/etc/init.d/$service" disable
+done
+exit 0
