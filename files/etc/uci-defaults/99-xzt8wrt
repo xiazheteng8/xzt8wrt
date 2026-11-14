@@ -3,8 +3,13 @@ uci set system.@system[0].hostname='xzt8wrt'
 uci set luci.main.lang='zh_cn'
 uci commit system
 uci commit luci
-# Extra services are present for configuration, not automatically exposed.
-for service in aria2 samba4 ttyd miniupnpd openvpn smartdns adblock sqm pbr ddns openclash passwall dockerd zerotier mwan3; do
-    [ ! -x "/etc/init.d/$service" ] || "/etc/init.d/$service" disable
+profile="$(cat /etc/xzt8wrt-profile 2>/dev/null)"
+for service in aria2 samba4 ttyd miniupnpd openvpn smartdns adblock sqm pbr ddns ddns-go passwall dockerd zerotier mwan3 acme adguardhome banip frpc frps irqbalance minidlna natmap netdata nfsd rclone syncthing tailscale timewol transmission vnstat watchcat; do
+    [ -x "/etc/init.d/$service" ] || continue
+    if [ "$profile" = full ]; then
+        "/etc/init.d/$service" enable
+    else
+        "/etc/init.d/$service" disable
+    fi
 done
 exit 0
