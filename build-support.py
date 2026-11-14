@@ -7,6 +7,7 @@ import re
 import shutil
 import subprocess
 import urllib.request
+import zipfile
 
 ROOT = pathlib.Path(__file__).resolve().parent
 REPO = 'https://github.com/immortalwrt/immortalwrt.git'
@@ -104,20 +105,73 @@ def collect(platform, source, output):
     (output / 'xzt8wrt-sha256sums').write_text('\n'.join(sums) + '\n')
 
 
+def bundle(input_dir, output):
+    """Package successful Actions artifacts as separate public device downloads."""
+    output.mkdir(parents=True, exist_ok=True)
+    count = 0
+    for directory in sorted(input_dir.iterdir()):
+        if not directory.is_dir() or not (directory / 'profiles.json').is_file():
+            continue
+        metadata = json.loads((directory / 'profiles.json').read_text())
+        source = json.loads((directory / 'source.json').read_text())
+        devices = json.loads((directory / 'devices.json').read_text())
+        suffix = directory.name.rsplit('-', 1)[-1]
+        if suffix not in ('full', 'lite'):
+            raise RuntimeError('Invalid artifact profile: ' + directory.name)
+        platform = next(key for key, value in TARGETS.items()
+                        if '/'.join(value[:2]) == metadata['target'])
+        for device in devices:
+            images = metadata['profiles'][device]['images']
+            if platform == 'x86':
+                images = [item for item in images if item.get('type') in ('combined', 'combined-efi')
+                          and item['name'].endswith('.img.gz')]
+            name = f"xzt8wrt-{source['version']}-{platform}-{device}-{suffix}.zip"
+            with zipfile.ZipFile(output / name, 'w', compression=zipfile.ZIP_STORED) as archive:
+                checksums = []
+                for item in images:
+                    path = directory / item['name']
+                    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+                    if digest != item['sha256']:
+                        raise RuntimeError('Invalid image hash: ' + path.name)
+                    archive.write(path, path.name)
+                    checksums.append(digest + '  ' + path.name)
+                for filename in ('.config', 'requested.config', 'source.json', 'source-version.txt',
+                                 'feeds-version.txt', 'kernel-version.json'):
+                    archive.write(directory / filename, filename)
+                archive.writestr('images.json', json.dumps(images, ensure_ascii=False, indent=2))
+                archive.writestr('xzt8wrt-sha256sums', '\n'.join(checksums) + '\n')
+                archive.writestr('READ-BEFORE-FLASHING.txt',
+                    f"Device: {device}\nProfile: {suffix}\nSource: {source['ref']} {source['commit']}\n"
+                    "Only use images for this exact hardware and bootloader layout.\n"
+                    "factory/initramfs/recovery/bootloader files are NOT interchangeable with sysupgrade.\n"
+                    "Follow the device installation documentation before writing any image.\n"
+                    "Build success is not a hardware test. Back up your device first.\n")
+            count += 1
+    if count:
+        sums = [hashlib.sha256(path.read_bytes()).hexdigest() + '  ' + path.name
+                for path in sorted(output.glob('*.zip'))]
+        (output / 'SHA256SUMS').write_text('\n'.join(sums) + '\n')
+    print(f'Created {count} device download bundles')
+    return count
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('command', choices=['resolve', 'config', 'collect'])
+    parser.add_argument('command', choices=['resolve', 'config', 'collect', 'bundle'])
     parser.add_argument('--platform', choices=TARGETS, default='x86')
     parser.add_argument('--profile', choices=['full', 'lite'], default='full')
     parser.add_argument('--source', type=pathlib.Path)
+    parser.add_argument('--input', type=pathlib.Path)
     parser.add_argument('--output', type=pathlib.Path)
     args = parser.parse_args()
     if args.command == 'resolve':
         print(json.dumps(resolve()))
     elif args.command == 'config':
         print(config(args.platform, args.profile), end='')
-    else:
+    elif args.command == 'collect':
         collect(args.platform, args.source, args.output)
+    else:
+        bundle(args.input, args.output)
 
 
 if __name__ == '__main__':

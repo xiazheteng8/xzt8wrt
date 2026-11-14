@@ -49,7 +49,7 @@ class BuildSupportTests(unittest.TestCase):
                 directory = source / 'bin' / 'targets' / target / subtarget
                 directory.mkdir(parents=True)
                 (directory / 'packages').mkdir()
-                metadata = {'profiles': {}, 'linux_kernel': {'version': 'test'}}
+                metadata = {'target': target + '/' + subtarget, 'profiles': {}, 'linux_kernel': {'version': 'test'}}
                 for device in devices:
                     kinds = ('combined', 'combined-efi') if platform == 'x86' else ('sysupgrade',)
                     images = []
@@ -61,10 +61,16 @@ class BuildSupportTests(unittest.TestCase):
                 manifest = directory / 'profiles.json'
                 manifest.write_text(json.dumps(metadata))
                 for name in ('.config', 'requested.config', 'source-version.txt', 'feeds-version.txt', 'source.json'):
-                    (source / name).write_text('test')
-                support.collect(platform, source, root / 'out')
-                self.assertTrue((root / 'out' / 'kernel-version.json').is_file())
-                self.assertFalse((root / 'out' / 'packages').exists())
+                    (source / name).write_text(json.dumps({'version': '1.0.0', 'ref': 'v1.0.0', 'commit': 'a'*40}) if name == 'source.json' else 'test')
+                artifact = root / ('xzt8wrt-test-' + platform + '-lite')
+                support.collect(platform, source, artifact)
+                self.assertTrue((artifact / 'kernel-version.json').is_file())
+                self.assertFalse((artifact / 'packages').exists())
+                self.assertEqual(support.bundle(root, root / 'release'), len(devices))
+                import zipfile
+                with zipfile.ZipFile(next((root / 'release').glob('*.zip'))) as archive:
+                    self.assertIn('images.json', archive.namelist())
+                    self.assertIn('xzt8wrt-sha256sums', archive.namelist())
                 missing = directory / metadata['profiles'][devices[0]]['images'][0]['name']
                 missing.write_bytes(b'corrupted')
                 with self.assertRaises(RuntimeError):
