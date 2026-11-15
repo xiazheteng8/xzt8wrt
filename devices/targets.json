@@ -1,0 +1,211 @@
+{
+  "schema": 1,
+  "reference": "https://github.com/kiddin9/Kwrt/tree/25.12/devices",
+  "reference_commit": "4ccbbc769b08ecc9d7c80c3f3de651988b6234a0",
+  "targets": {
+    "rockchip/armv8": {
+      "config": [
+        "CONFIG_TARGET_rockchip=y",
+        "CONFIG_TARGET_rockchip_armv8=y"
+      ],
+      "device_prefix": "rockchip_armv8",
+      "disk_images": true,
+      "driver_source": "official-stable",
+      "upstream_tree": "target/linux/rockchip",
+      "patches": [],
+      "overlays": []
+    },
+    "bcm27xx/bcm2711": {
+      "config": [
+        "CONFIG_TARGET_bcm27xx=y",
+        "CONFIG_TARGET_bcm27xx_bcm2711=y"
+      ],
+      "device_prefix": "bcm27xx_bcm2711",
+      "disk_images": true,
+      "driver_source": "official-stable",
+      "upstream_tree": "target/linux/bcm27xx",
+      "patches": [],
+      "overlays": []
+    },
+    "bcm27xx/bcm2712": {
+      "config": [
+        "CONFIG_TARGET_bcm27xx=y",
+        "CONFIG_TARGET_bcm27xx_bcm2712=y"
+      ],
+      "device_prefix": "bcm27xx_bcm2712",
+      "disk_images": true,
+      "driver_source": "official-stable",
+      "upstream_tree": "target/linux/bcm27xx",
+      "patches": [],
+      "overlays": []
+    },
+    "bcm27xx/bcm2710": {
+      "config": [
+        "CONFIG_TARGET_bcm27xx=y",
+        "CONFIG_TARGET_bcm27xx_bcm2710=y"
+      ],
+      "device_prefix": "bcm27xx_bcm2710",
+      "disk_images": true,
+      "driver_source": "official-stable",
+      "upstream_tree": "target/linux/bcm27xx",
+      "patches": [],
+      "overlays": []
+    },
+    "bcm27xx/bcm2709": {
+      "config": [
+        "CONFIG_TARGET_bcm27xx=y",
+        "CONFIG_TARGET_bcm27xx_bcm2709=y"
+      ],
+      "device_prefix": "bcm27xx_bcm2709",
+      "disk_images": true,
+      "driver_source": "official-stable",
+      "upstream_tree": "target/linux/bcm27xx",
+      "patches": [],
+      "overlays": []
+    },
+    "armsr/armv8": {
+      "config": [
+        "CONFIG_TARGET_armsr=y",
+        "CONFIG_TARGET_armsr_armv8=y"
+      ],
+      "device_prefix": "armsr_armv8",
+      "disk_images": true,
+      "driver_source": "official-stable",
+      "upstream_tree": "target/linux/armsr",
+      "patches": [],
+      "overlays": []
+    },
+    "mediatek/mt7622": {
+      "config": [
+        "CONFIG_TARGET_mediatek=y",
+        "CONFIG_TARGET_mediatek_mt7622=y"
+      ],
+      "device_prefix": "mediatek_mt7622",
+      "disk_images": false,
+      "driver_source": "official-stable",
+      "upstream_tree": "target/linux/mediatek",
+      "patches": [],
+      "overlays": []
+    },
+    "ipq40xx/generic": {
+      "config": [
+        "CONFIG_TARGET_ipq40xx=y",
+        "CONFIG_TARGET_ipq40xx_generic=y"
+      ],
+      "device_prefix": "ipq40xx_generic",
+      "disk_images": false,
+      "driver_source": "official-stable",
+      "upstream_tree": "target/linux/ipq40xx",
+      "patches": [],
+      "overlays": []
+    },
+    "bcm53xx/generic": {
+      "config": [
+        "CONFIG_TARGET_bcm53xx=y",
+        "CONFIG_TARGET_bcm53xx_generic=y"
+      ],
+      "device_prefix": "bcm53xx_generic",
+      "disk_images": false,
+      "driver_source": "official-stable",
+      "upstream_tree": "target/linux/bcm53xx",
+      "patches": [],
+      "overlays": []
+    },
+    "mvebu/cortexa9": {
+      "config": [
+        "CONFIG_TARGET_mvebu=y",
+        "CONFIG_TARGET_mvebu_cortexa9=y"
+      ],
+      "device_prefix": "mvebu_cortexa9",
+      "disk_images": false,
+      "driver_source": "official-stable",
+      "upstream_tree": "target/linux/mvebu",
+      "patches": [],
+      "overlays": []
+    },
+    "qualcommax/ipq60xx": {
+      "config": [
+        "CONFIG_TARGET_qualcommax=y",
+        "CONFIG_TARGET_qualcommax_ipq60xx=y"
+      ],
+      "device_prefix": "qualcommax_ipq60xx",
+      "disk_images": false,
+      "driver_source": "official-stable",
+      "upstream_tree": "target/linux/qualcommax",
+      "patches": [],
+      "overlays": []
+    },
+    "qualcommax/ipq807x": {
+      "config": [
+        "CONFIG_TARGET_qualcommax=y",
+        "CONFIG_TARGET_qualcommax_ipq807x=y"
+      ],
+      "device_prefix": "qualcommax_ipq807x",
+      "disk_images": false,
+      "driver_source": "official-stable",
+      "upstream_tree": "target/linux/qualcommax",
+      "patches": [],
+      "overlays": []
+    },
+    "qualcommax/ipq50xx": {
+      "config": [
+        "CONFIG_TARGET_qualcommax=y",
+        "CONFIG_TARGET_qualcommax_ipq50xx=y"
+      ],
+      "device_prefix": "qualcommax_ipq50xx",
+      "disk_images": false,
+      "driver_source": "official-stable",
+      "upstream_tree": "target/linux/qualcommax",
+      "patches": [],
+      "overlays": []
+    },
+    "ipq806x/generic": {
+      "config": [
+        "CONFIG_TARGET_ipq806x=y",
+        "CONFIG_TARGET_ipq806x_generic=y"
+      ],
+      "device_prefix": "ipq806x_generic",
+      "disk_images": false,
+      "driver_source": "official-stable",
+      "upstream_tree": "target/linux/ipq806x",
+      "patches": [],
+      "overlays": []
+    },
+    "sunxi/cortexa7": {
+      "config": [
+        "CONFIG_TARGET_sunxi=y",
+        "CONFIG_TARGET_sunxi_cortexa7=y"
+      ],
+      "device_prefix": "sunxi_cortexa7",
+      "disk_images": true,
+      "driver_source": "official-stable",
+      "upstream_tree": "target/linux/sunxi",
+      "patches": [],
+      "overlays": []
+    },
+    "sunxi/cortexa53": {
+      "config": [
+        "CONFIG_TARGET_sunxi=y",
+        "CONFIG_TARGET_sunxi_cortexa53=y"
+      ],
+      "device_prefix": "sunxi_cortexa53",
+      "disk_images": true,
+      "driver_source": "official-stable",
+      "upstream_tree": "target/linux/sunxi",
+      "patches": [],
+      "overlays": []
+    },
+    "mediatek/filogic": {
+      "config": [
+        "CONFIG_TARGET_mediatek=y",
+        "CONFIG_TARGET_mediatek_filogic=y"
+      ],
+      "device_prefix": "mediatek_filogic",
+      "disk_images": false,
+      "driver_source": "official-stable",
+      "upstream_tree": "target/linux/mediatek",
+      "patches": [],
+      "overlays": []
+    }
+  }
+}
