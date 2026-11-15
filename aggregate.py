@@ -9,6 +9,7 @@ import re
 import subprocess
 import tempfile
 import uuid
+import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent
 REPO = os.environ.get('GH_REPO', '')
@@ -105,6 +106,9 @@ def publish(directory):
     subprocess.run(['gh', 'release', 'upload', tag, '--repo', REPO, str(directory / 'kernel-state.json')], check=True)
     url = f'https://github.com/{REPO}/releases/tag/{tag}'
     print(url)
+    index = subprocess.run([sys.executable, str(ROOT / 'release-support.py'), 'index'])
+    if index.returncode:
+        print('下载索引更新失败，固件已发布，可直接访问 Releases。')
     if os.environ.get('GITHUB_STEP_SUMMARY'):
         with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
             summary.write('已发布：' + url + '\n')
