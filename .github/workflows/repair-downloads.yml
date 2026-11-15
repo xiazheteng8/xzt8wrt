@@ -1,0 +1,24 @@
+name: 修复独立镜像附件名称并重新发布
+on:
+  workflow_dispatch:
+    inputs:
+      source_tags:
+        description: '已完成发布标签，最新优先，英文逗号分隔'
+        required: true
+        type: string
+permissions:
+  contents: write
+concurrency:
+  group: xzt8wrt-release-snapshot
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: 校验已有附件并重新发布独立下载
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SOURCE_TAGS: ${{ inputs.source_tags }}
+        run: python3 repair-downloads.py
