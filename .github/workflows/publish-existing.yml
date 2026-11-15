@@ -1,0 +1,99 @@
+name: Publish completed builds
+on:
+  workflow_dispatch:
+    inputs:
+      source_run:
+        description: 'Completed Build xzt8wrt run ID containing successful firmware artifacts'
+        required: true
+        default: '43650456373'
+        type: string
+permissions:
+  actions: read
+  contents: write
+concurrency:
+  group: publish-existing-${{ inputs.source_run }}
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify the source workflow belongs to this repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SOURCE_RUN: ${{ inputs.source_run }}
+        run: |
+          python3 - <<'PY'
+          import json, os, re, subprocess
+          run = os.environ['SOURCE_RUN']
+          if not re.fullmatch(r'[0-9]+', run):
+              raise ValueError('source_run must be a numeric Actions run ID')
+          repo = os.environ['GH_REPO']
+          data = json.loads(subprocess.check_output(['gh', 'api', f'repos/{repo}/actions/runs/{run}']))
+          if data['head_repository']['full_name'] != repo or data['head_branch'] != 'main':
+              raise ValueError('Only this repository main branch may publish firmware')
+          if data['path'] != '.github/workflows/build.yml' or data['status'] != 'completed':
+              raise ValueError('Choose a completed Build xzt8wrt run; successful artifacts only')
+          with open(os.environ['GITHUB_ENV'], 'a') as output:
+              output.write('SOURCE_COMMIT=' + data['head_sha'] + '\n')
+          PY
+      - name: Summarize failed full-build logs
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SOURCE_RUN: ${{ inputs.source_run }}
+        run: |
+          python3 - <<'PYCODE'
+          import json, os, re, subprocess
+          repo, run = os.environ['GH_REPO'], os.environ['SOURCE_RUN']
+          jobs = json.loads(subprocess.check_output(['gh', 'api', '--paginate', '--slurp', f'repos/{repo}/actions/runs/{run}/jobs']))
+          for page in jobs:
+              for job in page['jobs']:
+                  if job['conclusion'] != 'failure' or not job['name'].endswith('-full'):
+                      continue
+                  log = subprocess.check_output(['gh', 'api', f"repos/{repo}/actions/jobs/{job['id']}/logs"]).decode(errors='replace')
+                  lines = [line for line in log.splitlines() if re.search(r'failed to download llvm|download-ci-llvm|ci-artifacts.rust-lang.org|curl:.*404|ERROR:.*(?:rust|failed)', line, re.I)][-25:]
+                  summary = '\n### ' + job['name'] + '\n```text\n' + '\n'.join(lines) + '\n```\n'
+                  print(summary)
+                  with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as output:
+                      output.write(summary)
+          PYCODE
+      - name: Download successful firmware artifacts from the chosen run
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.source_run }}
+          pattern: xzt8wrt-[0-9]*
+          path: release-input
+      - name: Verify and package exact-device downloads
+        env:
+          SOURCE_RUN: ${{ inputs.source_run }}
+        run: |
+          python3 test-build-support.py
+          python3 release-support.py legacy release-input "$SOURCE_RUN"
+          python3 build-support.py bundle --input release-input --output release-output
+          compgen -G 'release-output/*.zip' > /dev/null
+      - name: Publish verified firmware, then record success
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SOURCE_RUN: ${{ inputs.source_run }}
+        run: |
+          TAG="recovered-$SOURCE_RUN"
+          cat > release-notes.md <<EOF
+          Successful firmware recovered from https://github.com/$GH_REPO/actions/runs/$SOURCE_RUN
+
+          Only successful firmware artifacts are packaged; failed-job diagnostics are excluded.
+          Each ZIP targets one exact device/layout/profile. Verify SHA256SUMS before flashing.
+          Legacy kernel metadata is reconstructed from compiled profiles.json. Older builds did not record source patch diffs; this limitation is documented inside each affected ZIP.
+          Build success does not imply hardware testing. Follow the device installation instructions.
+          EOF
+          if ! gh release view "$TAG" > /dev/null 2>&1; then
+            gh release create "$TAG" --target "$SOURCE_COMMIT" --title "xzt8wrt · successful firmware from run $SOURCE_RUN" --notes-file release-notes.md
+          fi
+          gh release upload "$TAG" release-output/*.zip release-output/SHA256SUMS --clobber
+          gh release upload "$TAG" release-output/kernel-state.json --clobber
+          echo "Published: https://github.com/$GH_REPO/releases/tag/$TAG" >> "$GITHUB_STEP_SUMMARY"
