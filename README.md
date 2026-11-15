@@ -541,3 +541,9 @@ Release 标签以实际内核版本开头，如 `6.12.103-r1-x86-full`；自选�
 网站选择 TR3000 后会显示独立的“首次安装/中间固件”下载入口：[Cudy TR3000 1.0](https://www.cudy.com/pages/download-center/tr3000-1-0)、[TR3000 256MB 1.0](https://www.cudy.com/pages/download-center/tr3000-256mb-1-0)、[厂商中间固件说明](https://www.cudy.com/blogs/faq/openwrt-software-download)。这是厂商提供的下载页，需按 SN、闪存与硬件版本选文件；本站没有伪造通用中间固件。
 
 Cudy 提示 2025 年末存在使用新闪存的批次，旧中间固件可能无法启动。128MB/256MB、stock/ubootmod 不能混刷；ubootmod 需按其专用安装流程操作。其他型号没有核实到可靠中间固件时，只给教程，不提供占位下载。
+
+### 📦 x86 镜像分开下载
+
+固件工坊先选择镜像类型：物理机用 IMG，PVE/KVM 用 QCOW2，VMware 用 VMDK，VirtualBox 用 VDI，Hyper-V 用 VHDX。每种格式再按 BIOS / UEFI、SquashFS / ext4 单独打包，每个 ZIP 只有一份对应镜像。只下载自己需要的一份即可。历史发布保留原文件，新发布采用独立镜像包。
+
+下载文件统一使用 `xzt8wrt` 前缀，版本名称使用中文“精简版”“高大全版”。例如：`xzt8wrt-25.12.2-x86-generic-精简版-qcow2-uefi-squashfs.zip`。每个包仅含对应格式、启动方式和文件系统的一份镜像。

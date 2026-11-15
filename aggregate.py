@@ -23,9 +23,10 @@ def api(path):
 def key_for_asset(name, devices):
     for d in devices:
         for profile in ('full', 'lite'):
-            stem = f"-{d['platform']}-{d['id']}-{profile}"
-            if any(name.endswith(stem + ending) for ending in ('.zip', '-qcow2.zip', '-vmdk.zip', '-vdi.zip', '-vhdx.zip')):
-                return d['platform'] + '/' + profile
+            for label in (profile, {'full': '高大全版', 'lite': '精简版'}[profile]):
+                stem = f"-{d['platform']}-{d['id']}-{label}"
+                if (d['platform'] == 'x86' and re.search(re.escape(stem) + r'-(img|qcow2|vmdk|vdi|vhdx)-(bios|uefi)-(squashfs|ext4)\.zip$', name)) or any(name.endswith(stem + ending) for ending in ('.zip', '-qcow2.zip', '-vmdk.zip', '-vdi.zip', '-vhdx.zip')):
+                    return d['platform'] + '/' + profile
     return None
 
 
@@ -104,6 +105,7 @@ def publish(directory):
                     *map(str, sorted(directory.glob('*.zip'))), str(directory / 'SHA256SUMS')], check=True)
     # The completion marker is uploaded last; incomplete Releases are not baselines.
     subprocess.run(['gh', 'release', 'upload', tag, '--repo', REPO, str(directory / 'kernel-state.json')], check=True)
+    subprocess.run(['gh', 'release', 'edit', tag, '--repo', REPO, '--latest'], check=True)
     url = f'https://github.com/{REPO}/releases/tag/{tag}'
     print(url)
     index = subprocess.run([sys.executable, str(ROOT / 'release-support.py'), 'index'])

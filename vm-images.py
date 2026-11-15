@@ -38,30 +38,37 @@ def convert(input_dir, output):
                 with gzip.open(image, 'rb') as compressed, raw.open('wb') as uncompressed:
                     shutil.copyfileobj(compressed, uncompressed)
                 raw_images.append((item, raw))
-            for fmt in ('qcow2', 'vmdk', 'vdi', 'vhdx'):
-                filename = f"xzt8wrt-{source['version']}-x86-generic-{flavor}-{fmt}.zip"
-                generated = []
-                with zipfile.ZipFile(output / filename, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
-                    for original, raw in raw_images:
-                        destination = temp / (raw.stem + '.' + fmt)
+            for fmt in ('img', 'qcow2', 'vmdk', 'vdi', 'vhdx'):
+                for original, raw in raw_images:
+                    boot = 'uefi' if original['type'] == 'combined-efi' else 'bios'
+                    filesystem = original.get('filesystem') or ('squashfs' if 'squashfs' in original['name'] else 'ext4')
+                    label = {'full': '高大全版', 'lite': '精简版'}.get(flavor, flavor)
+                    filename = f"xzt8wrt-{source['version']}-x86-generic-{label}-{fmt}-{boot}-{filesystem}.zip"
+                    destination = temp / (raw.stem + '.' + fmt)
+                    if fmt == 'img':
+                        destination = directory / original['name']
+                    else:
                         args = ['qemu-img', 'convert', '-f', 'raw', '-O', fmt]
                         if fmt == 'vmdk':
                             args += ['-o', 'subformat=streamOptimized']
                         subprocess.run([*args, str(raw), str(destination)], check=True)
                         subprocess.run(['qemu-img', 'compare', '-f', 'raw', '-F', fmt, str(raw), str(destination)], check=True)
-                        digest = hashlib.sha256(destination.read_bytes()).hexdigest()
-                        generated.append({'name': destination.name, 'format': fmt, 'sha256': digest,
-                                          'source_name': original['name'], 'source_sha256': original['sha256'], 'boot': original['type']})
+                    digest = hashlib.sha256(destination.read_bytes()).hexdigest()
+                    with zipfile.ZipFile(output / filename, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
                         archive.write(destination, destination.name)
+                        for name in ('source.json', '.config', 'requested.config', 'kernel-version.json', 'kernel-source.json',
+                                     'source-patches.diff', 'legacy-build-metadata.json', 'custom-build.json'):
+                            if (directory / name).is_file():
+                                archive.write(directory / name, name)
+                        archive.writestr('SHA256SUMS', digest + '  ' + destination.name + '\n')
+                        archive.writestr('使用说明.txt', f'此包仅包含 {fmt.upper()} / {boot.upper()} / {filesystem} 镜像。\nIMG 用于物理机写盘；QCOW2 用于 PVE/KVM；VMDK 用于 VMware；VDI 用于 VirtualBox；VHDX 用于 Hyper-V。\n请按启动方式和文件系统选择，不需要下载其他类型。\n')
+                    if fmt != 'img':
                         destination.unlink()
-                    for name in ('source.json', '.config', 'requested.config', 'kernel-version.json', 'kernel-source.json',
-                                 'source-patches.diff', 'legacy-build-metadata.json', 'custom-build.json'):
-                        if (directory / name).is_file():
-                            archive.write(directory / name, name)
-                    archive.writestr('vm-images.json', json.dumps(generated, indent=2))
-                    archive.writestr('SHA256SUMS', '\n'.join(i['sha256'] + '  ' + i['name'] for i in generated) + '\n')
-                    archive.writestr('使用说明.txt', '由已通过校验的 x86 IMG 转换，qemu-img compare 验证虚拟磁盘内容一致；没有改动固件。\n按 BIOS/EFI 选择镜像，关闭虚拟机 Secure Boot，并按平台配置兼容网卡。虚拟机启动、网卡和接口划分仍需验证。\nQCOW2: PVE/KVM；VMDK: VMware；VDI: VirtualBox；VHDX: Hyper-V。\n')
-                count += 1
+                    count += 1
+            # Replace the old combined download only after every separate image succeeds.
+            for ending in ('', '-qcow2', '-vmdk', '-vdi', '-vhdx'):
+                for old_label in (flavor, {'full': '高大全版', 'lite': '精简版'}.get(flavor, flavor)):
+                    (output / f"xzt8wrt-{source['version']}-x86-generic-{old_label}{ending}.zip").unlink(missing_ok=True)
     if count:
         (output / 'SHA256SUMS').write_text('\n'.join(hashlib.sha256(p.read_bytes()).hexdigest() + '  ' + p.name for p in sorted(output.glob('*.zip'))) + '\n')
     print(f'Generated {count} verified virtual disk download bundles')
