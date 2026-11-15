@@ -154,6 +154,8 @@ jobs:
 
           This successful build is published immediately, independently of other matrix jobs.
           Official source commit: $BUILD_SOURCE
+          Build configuration commit: $BUILD_COMMIT
+          Release tag points to the publication branch; original firmware provenance remains in each ZIP.
           Build: https://github.com/$GH_REPO/actions/runs/$BUILD_RUN_ID
 
           Each ZIP is for one exact device, hardware layout and profile. Verify SHA256SUMS before use.
@@ -161,7 +163,7 @@ jobs:
           Follow the specific device installation instructions. Build success does not imply hardware testing.
           EOF
           if ! gh release view "$TAG" > /dev/null 2>&1; then
-            gh release create "$TAG" --target "$BUILD_COMMIT" --title "xzt8wrt $BUILD_VERSION · $BUILD_PLATFORM-$BUILD_PROFILE · $BUILD_RUN_ID" --notes-file release-notes.md
+            gh release create "$TAG" --target main --title "xzt8wrt $BUILD_VERSION · $BUILD_PLATFORM-$BUILD_PROFILE · $BUILD_RUN_ID" --notes-file release-notes.md
           fi
           gh release upload "$TAG" release-output/*.zip release-output/SHA256SUMS --clobber
           # Commit the success marker only after every firmware asset was uploaded.

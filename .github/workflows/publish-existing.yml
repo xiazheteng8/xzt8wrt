@@ -53,7 +53,9 @@ jobs:
               for job in page['jobs']:
                   if job['conclusion'] != 'failure' or not job['name'].endswith('-full'):
                       continue
-                  log = subprocess.check_output(['gh', 'api', f"repos/{repo}/actions/jobs/{job['id']}/logs"]).decode(errors='replace')
+                  log = subprocess.check_output(['gh', 'api', '--allow-escape-sequences', f"repos/{repo}/actions/jobs/{job['id']}/logs"]).decode(errors='replace')
+                  log = re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]', '', log)
+                  log = ''.join(c for c in log if c in '\n\r\t' or ord(c) >= 32)
                   lines = [line for line in log.splitlines() if re.search(r'failed to download llvm|download-ci-llvm|ci-artifacts.rust-lang.org|curl:.*404|ERROR:.*(?:rust|failed)', line, re.I)][-25:]
                   summary = '\n### ' + job['name'] + '\n```text\n' + '\n'.join(lines) + '\n```\n'
                   print(summary)
@@ -86,13 +88,16 @@ jobs:
           cat > release-notes.md <<EOF
           Successful firmware recovered from https://github.com/$GH_REPO/actions/runs/$SOURCE_RUN
 
+          Original build configuration commit: $SOURCE_COMMIT
+          The release tag points to the publication branch; original firmware provenance remains in each ZIP.
+
           Only successful firmware artifacts are packaged; failed-job diagnostics are excluded.
           Each ZIP targets one exact device/layout/profile. Verify SHA256SUMS before flashing.
           Legacy kernel metadata is reconstructed from compiled profiles.json. Older builds did not record source patch diffs; this limitation is documented inside each affected ZIP.
           Build success does not imply hardware testing. Follow the device installation instructions.
           EOF
           if ! gh release view "$TAG" > /dev/null 2>&1; then
-            gh release create "$TAG" --target "$SOURCE_COMMIT" --title "xzt8wrt · successful firmware from run $SOURCE_RUN" --notes-file release-notes.md
+            gh release create "$TAG" --target main --title "xzt8wrt · successful firmware from run $SOURCE_RUN" --notes-file release-notes.md
           fi
           gh release upload "$TAG" release-output/*.zip release-output/SHA256SUMS --clobber
           gh release upload "$TAG" release-output/kernel-state.json --clobber
