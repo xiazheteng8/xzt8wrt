@@ -176,5 +176,7 @@ jobs:
             requested.config
             immortalwrt/.config
             immortalwrt/source.json
+            immortalwrt/arm-adaptation.json
+            immortalwrt/arm-adaptation.diff
             immortalwrt/logs/
           include-hidden-files: true
