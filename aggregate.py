@@ -106,6 +106,10 @@ def publish(directory):
     # The completion marker is uploaded last; incomplete Releases are not baselines.
     subprocess.run(['gh', 'release', 'upload', tag, '--repo', REPO, str(directory / 'kernel-state.json')], check=True)
     subprocess.run(['gh', 'release', 'edit', tag, '--repo', REPO, '--latest'], check=True)
+    # GitHub sanitizes non-ASCII filenames; use Chinese asset labels for identification.
+    for asset in api(f'repos/{REPO}/releases/tags/{tag}')['assets']:
+        label = asset['name'].replace('-full', '-高大全版').replace('-lite', '-精简版')
+        subprocess.run(['gh', 'api', '--method', 'PATCH', f"repos/{REPO}/releases/assets/{asset['id']}", '-f', 'label=' + label], check=True, stdout=subprocess.DEVNULL)
     url = f'https://github.com/{REPO}/releases/tag/{tag}'
     print(url)
     index = subprocess.run([sys.executable, str(ROOT / 'release-support.py'), 'index'])

@@ -43,7 +43,7 @@ def convert(input_dir, output):
                     boot = 'uefi' if original['type'] == 'combined-efi' else 'bios'
                     filesystem = original.get('filesystem') or ('squashfs' if 'squashfs' in original['name'] else 'ext4')
                     label = {'full': '高大全版', 'lite': '精简版'}.get(flavor, flavor)
-                    filename = f"xzt8wrt-{source['version']}-x86-generic-{label}-{fmt}-{boot}-{filesystem}.zip"
+                    filename = f"xzt8wrt-{source['version']}-x86-generic-{flavor}-{fmt}-{boot}-{filesystem}.zip"
                     destination = temp / (raw.stem + '.' + fmt)
                     if fmt == 'img':
                         destination = directory / original['name']

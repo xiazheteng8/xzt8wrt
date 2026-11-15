@@ -234,7 +234,7 @@ def bundle(input_dir, output):
             if platform == 'x86':
                 images = [item for item in images if item.get('type') in ('combined', 'combined-efi')
                           and item['name'].endswith('.img.gz')]
-            flavor = "custom-" + custom["signature"] if custom else {"full": "高大全版", "lite": "精简版"}[suffix]
+            flavor = "custom-" + custom["signature"] if custom else suffix
             name = f"xzt8wrt-{source['version']}-{platform}-{device}-{flavor}.zip"
             with zipfile.ZipFile(output / name, 'w', compression=zipfile.ZIP_STORED) as archive:
                 checksums = []

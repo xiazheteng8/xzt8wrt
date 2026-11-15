@@ -546,4 +546,4 @@ Cudy 提示 2025 年末存在使用新闪存的批次，旧中间固件可能无
 
 固件工坊先选择镜像类型：物理机用 IMG，PVE/KVM 用 QCOW2，VMware 用 VMDK，VirtualBox 用 VDI，Hyper-V 用 VHDX。每种格式再按 BIOS / UEFI、SquashFS / ext4 单独打包，每个 ZIP 只有一份对应镜像。只下载自己需要的一份即可。历史发布保留原文件，新发布采用独立镜像包。
 
-下载文件统一使用 `xzt8wrt` 前缀，版本名称使用中文“精简版”“高大全版”。例如：`xzt8wrt-25.12.2-x86-generic-精简版-qcow2-uefi-squashfs.zip`。每个包仅含对应格式、启动方式和文件系统的一份镜像。
+下载文件统一使用 `xzt8wrt` 前缀。GitHub 附件显示名称和网站按钮使用中文“精简版”“高大全版”；实际附件文件名保留兼容的 `lite` / `full`，避免 GitHub 改写中文文件名。例如：`xzt8wrt-25.12.2-x86-generic-lite-qcow2-uefi-squashfs.zip`。每个包仅含对应格式、启动方式和文件系统的一份镜像。
