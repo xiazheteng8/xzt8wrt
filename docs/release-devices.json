@@ -1,0 +1,103 @@
+{
+  "schema": 1,
+  "note": "固定发布名单：结合常见设备资料、用户需求和现有成功构建确定，非销量排名。其他机型只提供自建教程。",
+  "references": [
+    "https://openwrt.org/toh/buyerguide",
+    "https://www.gl-inet.com/products/gl-mt6000/",
+    "https://www.gl-inet.com/products/gl-mt3000/",
+    "https://www.friendlyelec.com/",
+    "https://www.cudy.com/pages/download-center/tr3000-1-0"
+  ],
+  "devices": [
+    {
+      "uid": "x86/64/generic",
+      "id": "generic",
+      "platform": "x86",
+      "name": "x86_64 通用（含虚拟机）"
+    },
+    {
+      "uid": "rockchip/armv8/friendlyarm_nanopi-r2s",
+      "id": "friendlyarm_nanopi-r2s",
+      "platform": "rockchip",
+      "name": "NanoPi R2S"
+    },
+    {
+      "uid": "rockchip/armv8/friendlyarm_nanopi-r4s",
+      "id": "friendlyarm_nanopi-r4s",
+      "platform": "rockchip",
+      "name": "NanoPi R4S"
+    },
+    {
+      "uid": "rockchip/armv8/friendlyarm_nanopi-r5s",
+      "id": "friendlyarm_nanopi-r5s",
+      "platform": "rockchip",
+      "name": "NanoPi R5S"
+    },
+    {
+      "uid": "rockchip/armv8/friendlyarm_nanopi-r6s",
+      "id": "friendlyarm_nanopi-r6s",
+      "platform": "rockchip",
+      "name": "NanoPi R6S"
+    },
+    {
+      "uid": "rockchip/armv8/lunzn_fastrhino-r66s",
+      "id": "lunzn_fastrhino-r66s",
+      "platform": "rockchip",
+      "name": "lunzn_fastrhino-r66s"
+    },
+    {
+      "uid": "rockchip/armv8/lunzn_fastrhino-r68s",
+      "id": "lunzn_fastrhino-r68s",
+      "platform": "rockchip",
+      "name": "lunzn_fastrhino-r68s"
+    },
+    {
+      "uid": "mediatek/filogic/cudy_tr3000-v1",
+      "id": "cudy_tr3000-v1",
+      "platform": "filogic",
+      "name": "TR3000 v1"
+    },
+    {
+      "uid": "mediatek/filogic/cudy_tr3000-256mb-v1",
+      "id": "cudy_tr3000-256mb-v1",
+      "platform": "filogic",
+      "name": "TR3000 256mb v1"
+    },
+    {
+      "uid": "mediatek/filogic/cudy_tr3000-v1-ubootmod",
+      "id": "cudy_tr3000-v1-ubootmod",
+      "platform": "filogic",
+      "name": "cudy_tr3000-v1-ubootmod"
+    },
+    {
+      "uid": "mediatek/filogic/xiaomi_redmi-router-ax6000-stock",
+      "id": "xiaomi_redmi-router-ax6000-stock",
+      "platform": "filogic",
+      "name": "xiaomi_redmi-router-ax6000-stock"
+    },
+    {
+      "uid": "mediatek/filogic/xiaomi_redmi-router-ax6000-ubootmod",
+      "id": "xiaomi_redmi-router-ax6000-ubootmod",
+      "platform": "filogic",
+      "name": "Redmi Router AX6000 (OpenWrt U-Boot layout)"
+    },
+    {
+      "uid": "mediatek/filogic/asus_tuf-ax6000",
+      "id": "asus_tuf-ax6000",
+      "platform": "filogic",
+      "name": "TUF-AX6000"
+    },
+    {
+      "uid": "mediatek/filogic/glinet_gl-mt3000",
+      "id": "glinet_gl-mt3000",
+      "platform": "filogic",
+      "name": "GL-MT3000"
+    },
+    {
+      "uid": "mediatek/filogic/glinet_gl-mt6000",
+      "id": "glinet_gl-mt6000",
+      "platform": "filogic",
+      "name": "GL-MT6000"
+    }
+  ]
+}

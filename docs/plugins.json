@@ -1,0 +1,933 @@
+{
+  "schema": 1,
+  "reference": "https://openwrt.ai/",
+  "package_reference": "https://openwrt.ai/json/v1/releases/packages-25.12/x86_64-index.json",
+  "verified_official_version": "25.12.2",
+  "plugins": [
+    {
+      "id": "luci-app-accesscontrol-plus",
+      "name": "访问控制",
+      "packages": [
+        "luci-app-accesscontrol-plus"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-acme",
+      "name": "https证书申请",
+      "packages": [
+        "luci-app-acme"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-adbyby-plus",
+      "name": "adbyby去广告",
+      "packages": [
+        "luci-app-adbyby-plus"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-adguardhome",
+      "name": "ADG去广告",
+      "packages": [
+        "luci-app-adguardhome"
+      ],
+      "supported": true,
+      "large": true
+    },
+    {
+      "id": "luci-app-airplay2",
+      "name": "Airplay2音箱",
+      "packages": [
+        "luci-app-airplay2"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-aliyundrive-webdav",
+      "name": "阿里云盘WebDAV",
+      "packages": [
+        "luci-app-aliyundrive-webdav"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-ap-modem",
+      "name": "访问AP/光猫",
+      "packages": [
+        "luci-app-ap-modem"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-aria2",
+      "name": "Aria2下载工具",
+      "packages": [
+        "luci-app-aria2"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-arpbind",
+      "name": "ARP绑定",
+      "packages": [
+        "luci-app-arpbind"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-bandix",
+      "name": "流量监控限速",
+      "packages": [
+        "luci-app-bandix"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-broadbandacc",
+      "name": "宽带提速",
+      "packages": [
+        "luci-app-broadbandacc"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-cifs-mount",
+      "name": "共享盘挂载",
+      "packages": [
+        "luci-app-cifs-mount"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-clouddrive2",
+      "name": "多云盘管理工具",
+      "packages": [
+        "luci-app-clouddrive2"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-cpulimit",
+      "name": "CPU占用率限制",
+      "packages": [
+        "luci-app-cpulimit"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-cloudreve",
+      "name": "多存储网盘",
+      "packages": [
+        "luci-app-cloudreve"
+      ],
+      "supported": false,
+      "large": true
+    },
+    {
+      "id": "luci-app-cupsd",
+      "name": "CUPS打印服务",
+      "packages": [
+        "luci-app-cupsd"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-ddns",
+      "name": "动态域名解析",
+      "packages": [
+        "luci-app-ddns"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-ddns-go",
+      "name": "动态域名解析",
+      "packages": [
+        "luci-app-ddns-go"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-ddnsto",
+      "name": "内网穿透",
+      "packages": [
+        "luci-app-ddnsto"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-diskman",
+      "name": "磁盘管理",
+      "packages": [
+        "luci-app-diskman"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-dufs",
+      "name": "支持WebDAV的文件管理",
+      "packages": [
+        "luci-app-dufs"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-easymesh",
+      "name": "Mesh组网",
+      "packages": [
+        "luci-app-easymesh"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-easytier",
+      "name": "异地组网",
+      "packages": [
+        "luci-app-easytier"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-filebrowser-q",
+      "name": "文件网盘管理",
+      "packages": [
+        "luci-app-filebrowser-q"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-frpc",
+      "name": "内网穿透",
+      "packages": [
+        "luci-app-frpc"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-frps",
+      "name": "luci-app-frps",
+      "packages": [
+        "luci-app-frps"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-fwlive",
+      "name": "防火墙实时视图",
+      "packages": [
+        "luci-app-fwlive"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-gately",
+      "name": "网络网关工具集",
+      "packages": [
+        "luci-app-gately"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-guest-wifi",
+      "name": "访客WIFI",
+      "packages": [
+        "luci-app-guest-wifi"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-hd-idle",
+      "name": "硬盘休眠",
+      "packages": [
+        "luci-app-hd-idle"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-homeassistant",
+      "name": "智能家居",
+      "packages": [
+        "luci-app-homeassistant"
+      ],
+      "supported": false,
+      "large": true
+    },
+    {
+      "id": "luci-app-homeredirect",
+      "name": "端口转发",
+      "packages": [
+        "luci-app-homeredirect"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-ipsec-server",
+      "name": "luci-app-ipsec-server",
+      "packages": [
+        "luci-app-ipsec-server"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-iptvhelper",
+      "name": "IPTV助手",
+      "packages": [
+        "luci-app-iptvhelper"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-kodexplorer",
+      "name": "可道云网盘",
+      "packages": [
+        "luci-app-kodexplorer"
+      ],
+      "supported": false,
+      "large": true
+    },
+    {
+      "id": "luci-app-ksmbd",
+      "name": "内核级文件共享",
+      "packages": [
+        "luci-app-ksmbd"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-linkease",
+      "name": "易有云文件管理",
+      "packages": [
+        "luci-app-linkease"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-lucky",
+      "name": "Lucy多功能网络工具",
+      "packages": [
+        "luci-app-lucky"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-minidlna",
+      "name": "luci-app-minidlna",
+      "packages": [
+        "luci-app-minidlna"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-mosdns",
+      "name": "DNS转发",
+      "packages": [
+        "luci-app-mosdns"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-msd_lite",
+      "name": "IPTV组播",
+      "packages": [
+        "luci-app-msd_lite"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-mwan3-nft",
+      "name": "负载均衡",
+      "packages": [
+        "luci-app-mwan3-nft"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-natmap",
+      "name": "内网穿透",
+      "packages": [
+        "luci-app-natmap"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-nft-timecontrol",
+      "name": "上网时间控制",
+      "packages": [
+        "luci-app-nft-timecontrol"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-npc",
+      "name": "NPS内网穿透客户端",
+      "packages": [
+        "luci-app-npc"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-netdata",
+      "name": "性能监测",
+      "packages": [
+        "luci-app-netdata"
+      ],
+      "supported": true,
+      "large": true
+    },
+    {
+      "id": "luci-app-fastnet",
+      "name": "网络体检/测速",
+      "packages": [
+        "luci-app-fastnet"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-nlbwmon",
+      "name": "流量统计",
+      "packages": [
+        "luci-app-nlbwmon"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-oaf",
+      "name": "应用过滤",
+      "packages": [
+        "luci-app-oaf"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-openclaw",
+      "name": "OpenClaw AI",
+      "packages": [
+        "luci-app-openclaw"
+      ],
+      "supported": false,
+      "large": true
+    },
+    {
+      "id": "luci-app-openlist2",
+      "name": "原alist 多存储文件列表",
+      "packages": [
+        "luci-app-openlist2"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-openvpn-plus",
+      "name": "OpenVPN服务与客户端",
+      "packages": [
+        "luci-app-openvpn-plus"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-p910nd",
+      "name": "USB打印机",
+      "packages": [
+        "luci-app-p910nd"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-parentcontrol",
+      "name": "家长控制",
+      "packages": [
+        "luci-app-parentcontrol"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-partexp",
+      "name": "分区扩容",
+      "packages": [
+        "luci-app-partexp"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-qbittorrent",
+      "name": "BT下载工具",
+      "packages": [
+        "luci-app-qbittorrent"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-qosmate",
+      "name": "Qos流量控制",
+      "packages": [
+        "luci-app-qosmate"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-quickfile",
+      "name": "文件管理器",
+      "packages": [
+        "luci-app-quickfile"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-rclone",
+      "name": "云盘挂载同步",
+      "packages": [
+        "luci-app-rclone"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-run",
+      "name": "luci-app-run",
+      "packages": [
+        "luci-app-run"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-samba4",
+      "name": "samba文件共享",
+      "packages": [
+        "luci-app-samba4"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-shunt",
+      "name": "策略路由",
+      "packages": [
+        "luci-app-shunt"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-smartdns",
+      "name": "luci-app-smartdns",
+      "packages": [
+        "luci-app-smartdns"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-snmpd",
+      "name": "luci-app-snmpd",
+      "packages": [
+        "luci-app-snmpd"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-socat",
+      "name": "端口转发",
+      "packages": [
+        "luci-app-socat"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-softethervpn",
+      "name": "luci-app-softethervpn",
+      "packages": [
+        "luci-app-softethervpn"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-statistics",
+      "name": "collectd系统监控统计",
+      "packages": [
+        "luci-app-statistics"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-substore",
+      "name": "订阅管理与转换",
+      "packages": [
+        "luci-app-substore"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-syncdial",
+      "name": "多拨",
+      "packages": [
+        "luci-app-syncdial"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-tailscale-community",
+      "name": "Tailscale虚拟组网",
+      "packages": [
+        "luci-app-tailscale-community"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-taskplan",
+      "name": "定时/开机任务",
+      "packages": [
+        "luci-app-taskplan"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-thunder",
+      "name": "迅雷下载",
+      "packages": [
+        "luci-app-thunder"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-timedreboot",
+      "name": "定时重启",
+      "packages": [
+        "luci-app-timedreboot"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-timewol",
+      "name": "网络唤醒",
+      "packages": [
+        "luci-app-timewol"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-trafficctl",
+      "name": "流量限速",
+      "packages": [
+        "luci-app-trafficctl"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-transmission",
+      "name": "BT下载",
+      "packages": [
+        "luci-app-transmission"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-ttyd",
+      "name": "网页版命令行",
+      "packages": [
+        "luci-app-ttyd"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-unblockneteasemusic",
+      "name": "解锁网易云音乐",
+      "packages": [
+        "luci-app-unblockneteasemusic"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-unishare",
+      "name": "多种文件共享",
+      "packages": [
+        "luci-app-unishare"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-uugamebooster",
+      "name": "UU游戏加速器",
+      "packages": [
+        "luci-app-uugamebooster"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-vlmcsd",
+      "name": "KMS服务器",
+      "packages": [
+        "luci-app-vlmcsd"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-vsftpd",
+      "name": "FTP服务器",
+      "packages": [
+        "luci-app-vsftpd"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-watchcat",
+      "name": "断网检测重启",
+      "packages": [
+        "luci-app-watchcat"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-webdav",
+      "name": "基于Nginx的WebDAV",
+      "packages": [
+        "luci-app-webdav"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-wechatpush",
+      "name": "通知推送",
+      "packages": [
+        "luci-app-wechatpush"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-apfree-wifidog",
+      "name": "无线认证",
+      "packages": [
+        "luci-app-apfree-wifidog"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-wifischedule",
+      "name": "WiFi计划任务",
+      "packages": [
+        "luci-app-wifischedule"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-wireguard",
+      "name": "luci-app-wireguard",
+      "packages": [
+        "luci-app-wireguard"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-wrtbwmon",
+      "name": "流量监控",
+      "packages": [
+        "luci-app-wrtbwmon"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-xlnetacc",
+      "name": "迅雷快鸟",
+      "packages": [
+        "luci-app-xlnetacc"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "luci-app-xunyou",
+      "name": "迅游加速器",
+      "packages": [
+        "luci-app-xunyou"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-zerotier",
+      "name": "内网穿透",
+      "packages": [
+        "luci-app-zerotier"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "automount",
+      "name": "自动挂载USB/硬盘",
+      "packages": [
+        "automount"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "btop",
+      "name": "性能监控",
+      "packages": [
+        "btop"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "naiveproxy",
+      "name": "naiveproxy",
+      "packages": [
+        "naiveproxy"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "open-vm-tools",
+      "name": "open-vm-tools",
+      "packages": [
+        "open-vm-tools"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "qemu-ga",
+      "name": "qemu-ga",
+      "packages": [
+        "qemu-ga"
+      ],
+      "supported": true,
+      "large": false
+    },
+    {
+      "id": "tvhelper",
+      "name": "盒子助手",
+      "packages": [
+        "tvhelper"
+      ],
+      "supported": false,
+      "large": false
+    },
+    {
+      "id": "luci-app-passwall",
+      "name": "PassWall",
+      "packages": [
+        "luci-app-passwall",
+        "xray-core"
+      ],
+      "supported": true,
+      "proxy": true,
+      "external": false
+    },
+    {
+      "id": "luci-app-passwall2",
+      "name": "PassWall 2",
+      "packages": [
+        "luci-app-passwall2",
+        "xray-core"
+      ],
+      "supported": true,
+      "proxy": true,
+      "external": true,
+      "source": {
+        "url": "https://github.com/Openwrt-Passwall/openwrt-passwall2.git",
+        "commit": "35d20ce6e9cc40138841c031954899fdefa765d7",
+        "directory": "luci-app-passwall2"
+      }
+    },
+    {
+      "id": "luci-app-ssr-plus",
+      "name": "Hello World / SSR Plus+",
+      "packages": [
+        "luci-app-ssr-plus",
+        "xray-core"
+      ],
+      "supported": true,
+      "proxy": true,
+      "external": true,
+      "source": {
+        "url": "https://github.com/fw876/helloworld.git",
+        "commit": "6fbc9f563c9e7cd3b65061fba13ffc62666066aa",
+        "directory": "luci-app-ssr-plus"
+      }
+    }
+  ]
+}
