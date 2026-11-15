@@ -37,7 +37,6 @@ jobs:
       commit: ${{ steps.source.outputs.commit }}
       matrix: ${{ steps.source.outputs.matrix }}
       has_updates: ${{ steps.source.outputs.has_updates }}
-      baseline: ${{ steps.source.outputs.baseline }}
     steps:
       - uses: actions/checkout@v4
       - name: Resolve latest official stable release and build matrix
@@ -52,12 +51,7 @@ jobs:
         run: |
           python3 test-build-support.py
           mkdir -p baseline
-          gh api "repos/$GH_REPO/releases" --jq '[.[] | select(.draft == false and any(.assets[]; .name == "kernel-state.json"))][0].tag_name // empty' > baseline/tag.txt
-          if [ -s baseline/tag.txt ]; then
-            gh release download "$(cat baseline/tag.txt)" --pattern kernel-state.json --dir baseline
-          else
-            printf '{}\n' > baseline/kernel-state.json
-          fi
+          python3 release-support.py baseline > baseline/kernel-state.json
           python3 build-support.py resolve > source.json
           python3 - <<'PY'
           import json, os
@@ -87,7 +81,6 @@ jobs:
               for key, value in source.items():
                   out.write(f'{key}={value}\n')
               out.write('has_updates=' + ('true' if jobs else 'false') + '\n')
-              out.write('baseline=' + json.dumps(baseline) + '\n')
               out.write('matrix=' + json.dumps({'include': jobs or [{'platform': 'x86', 'profile': 'lite', 'kernel': kernels['x86']}]}) + '\n')
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as out:
               out.write(f"Official stable: {source['ref']}\n\nSource commit: {source['commit']}\n\n")
@@ -104,6 +97,8 @@ jobs:
       matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 360
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - name: Free runner disk space
@@ -135,6 +130,42 @@ jobs:
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 14
+      - name: Package this successful build immediately
+        if: ${{ success() && !inputs.configure_only }}
+        run: |
+          mkdir -p release-output
+          python3 build-support.py bundle --input artifacts --output release-output
+          compgen -G 'release-output/*.zip' > /dev/null
+      - name: Publish this build without waiting for other jobs
+        if: ${{ success() && !inputs.configure_only }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          BUILD_VERSION: ${{ needs.prepare.outputs.version }}
+          BUILD_COMMIT: ${{ github.sha }}
+          BUILD_RUN_ID: ${{ github.run_id }}
+          BUILD_SOURCE: ${{ needs.prepare.outputs.commit }}
+          BUILD_PLATFORM: ${{ matrix.platform }}
+          BUILD_PROFILE: ${{ matrix.profile }}
+        run: |
+          TAG="build-$BUILD_RUN_ID-$BUILD_PLATFORM-$BUILD_PROFILE"
+          cat > release-notes.md <<EOF
+          ImmortalWrt $BUILD_VERSION / xzt8wrt / $BUILD_PLATFORM / $BUILD_PROFILE
+
+          This successful build is published immediately, independently of other matrix jobs.
+          Official source commit: $BUILD_SOURCE
+          Build: https://github.com/$GH_REPO/actions/runs/$BUILD_RUN_ID
+
+          Each ZIP is for one exact device, hardware layout and profile. Verify SHA256SUMS before use.
+          factory/initramfs/recovery/bootloader files are not generic intermediate firmware.
+          Follow the specific device installation instructions. Build success does not imply hardware testing.
+          EOF
+          if ! gh release view "$TAG" > /dev/null 2>&1; then
+            gh release create "$TAG" --target "$BUILD_COMMIT" --title "xzt8wrt $BUILD_VERSION · $BUILD_PLATFORM-$BUILD_PROFILE · $BUILD_RUN_ID" --notes-file release-notes.md
+          fi
+          gh release upload "$TAG" release-output/*.zip release-output/SHA256SUMS --clobber
+          # Commit the success marker only after every firmware asset was uploaded.
+          gh release upload "$TAG" release-output/kernel-state.json --clobber
       - name: Upload diagnostics or configuration validation
         if: ${{ !cancelled() && (failure() || inputs.configure_only) }}
         uses: actions/upload-artifact@v4
@@ -147,53 +178,3 @@ jobs:
             immortalwrt/source.json
             immortalwrt/logs/
           include-hidden-files: true
-
-  publish:
-    name: Publish successful firmware downloads
-    needs: [prepare, firmware]
-    if: ${{ !cancelled() && needs.prepare.result == 'success' && needs.prepare.outputs.has_updates == 'true' && !inputs.configure_only }}
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: xzt8wrt-${{ needs.prepare.outputs.version }}-*
-          path: release-input
-      - name: Package separate downloads for each device
-        id: bundles
-        env:
-          KERNEL_BASELINE_JSON: ${{ needs.prepare.outputs.baseline }}
-        run: |
-          mkdir -p release-input release-output
-          python3 build-support.py bundle --input release-input --output release-output
-          if compgen -G 'release-output/*.zip' > /dev/null; then
-            echo 'available=true' >> "$GITHUB_OUTPUT"
-          fi
-      - name: Publish firmware release
-        if: steps.bundles.outputs.available == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          BUILD_VERSION: ${{ needs.prepare.outputs.version }}
-          BUILD_COMMIT: ${{ github.sha }}
-          BUILD_RUN_ID: ${{ github.run_id }}
-          BUILD_SOURCE: ${{ needs.prepare.outputs.commit }}
-          BUILD_REPO: ${{ github.repository }}
-        run: |
-          TAG="build-$BUILD_RUN_ID"
-          cat > release-notes.md <<EOF
-          ImmortalWrt $BUILD_VERSION / xzt8wrt
-
-          Official source commit: $BUILD_SOURCE
-          Build: https://github.com/$BUILD_REPO/actions/runs/$BUILD_RUN_ID
-
-          Each ZIP is for one exact device, hardware layout and profile. Only successful build jobs are published; unavailable devices are not included.
-          Verify SHA256SUMS before use. Each ZIP includes images.json, source information, configuration and image checksums.
-          factory/initramfs/recovery/bootloader files are not generic intermediate firmware. Follow the specific device installation instructions. Build success does not imply hardware testing.
-          EOF
-          if ! gh release view "$TAG" > /dev/null 2>&1; then
-            gh release create "$TAG" --target "$BUILD_COMMIT" --title "xzt8wrt $BUILD_VERSION · build $BUILD_RUN_ID" --notes-file release-notes.md
-          fi
-          gh release upload "$TAG" release-output/* --clobber
