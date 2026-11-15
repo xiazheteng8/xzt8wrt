@@ -32,6 +32,8 @@ jobs:
       ref: ${{ steps.source.outputs.ref }}
       commit: ${{ steps.source.outputs.commit }}
       matrix: ${{ steps.source.outputs.matrix }}
+      has_updates: ${{ steps.source.outputs.has_updates }}
+      baseline: ${{ steps.source.outputs.baseline }}
     steps:
       - uses: actions/checkout@v4
       - name: Resolve latest official stable release and build matrix
@@ -39,28 +41,44 @@ jobs:
         env:
           SELECT_PLATFORM: ${{ inputs.platform || 'all' }}
           SELECT_PROFILE: ${{ inputs.profile || 'both' }}
+          SCHEDULED_CHECK: ${{ github.event_name == 'schedule' && '1' || '0' }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
           python3 test-build-support.py
+          mkdir -p baseline
+          gh api "repos/$GH_REPO/releases" --jq '[.[] | select(.draft == false and any(.assets[]; .name == "kernel-state.json"))][0].tag_name // empty' > baseline/tag.txt
+          if [ -s baseline/tag.txt ]; then
+            gh release download "$(cat baseline/tag.txt)" --pattern kernel-state.json --dir baseline
+          else
+            printf '{}\n' > baseline/kernel-state.json
+          fi
           python3 build-support.py resolve > source.json
           python3 - <<'PY'
           import json, os
           source = json.load(open('source.json'))
-          combinations = [('x86','full'), ('x86','lite'), ('rockchip','full'), ('rockchip','lite'), ('filogic','lite')]
-          jobs = [{'platform': p, 'profile': v} for p,v in combinations
-                  if os.environ['SELECT_PLATFORM'] in ('all', p)
-                  and os.environ['SELECT_PROFILE'] in ('both', v)]
-          if not jobs:
-              raise SystemExit('No supported combination. Filogic supports lite only.')
+          import importlib.util
+          spec = importlib.util.spec_from_file_location('support', 'build-support.py')
+          support = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(support)
+          baseline = json.load(open('baseline/kernel-state.json'))
+          kernels = {p: support.kernel_source(p, source['version']) for p in support.TARGETS}
+          jobs, skipped = support.build_plan(os.environ['SELECT_PLATFORM'], os.environ['SELECT_PROFILE'],
+                                            os.environ['SCHEDULED_CHECK'] == '1', baseline, kernels)
           with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
               for key, value in source.items():
                   out.write(f'{key}={value}\n')
-              out.write('matrix=' + json.dumps({'include': jobs}) + '\n')
+              out.write('has_updates=' + ('true' if jobs else 'false') + '\n')
+              out.write('baseline=' + json.dumps(baseline) + '\n')
+              out.write('matrix=' + json.dumps({'include': jobs or [{'platform': 'x86', 'profile': 'lite', 'kernel': kernels['x86']}]}) + '\n')
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as out:
               out.write(f"Official stable: {source['ref']}\n\nSource commit: {source['commit']}\n\n")
-              out.write('Targets: ' + ', '.join(f"{j['platform']}/{j['profile']}" for j in jobs))
+              out.write('Build targets: ' + (', '.join(f"{j['platform']}/{j['profile']}" for j in jobs) or 'none') + '\n\n')
+              out.write('Unchanged kernels, skipped: ' + (', '.join(skipped) or 'none'))
           PY
   firmware:
     needs: prepare
+    if: needs.prepare.outputs.has_updates == 'true'
     name: ${{ matrix.platform }}-${{ matrix.profile }}
     strategy:
       fail-fast: false
@@ -77,7 +95,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential clang flex bison g++ gawk gcc-multilib g++-multilib gettext git libncurses-dev libssl-dev python3 python3-setuptools python3-pyelftools rsync swig unzip zlib1g-dev file wget curl patch diffutils tar xz-utils zstd libelf-dev
+          sudo apt-get install -y build-essential clang flex bison g++ gawk gcc-multilib g++-multilib gettext git libncurses-dev libssl-dev python3 python3-setuptools python3-pyelftools rsync swig unzip zlib1g-dev file wget curl patch diffutils tar xz-utils zstd libelf-dev cmake ninja-build
       - name: Build or validate firmware configuration
         run: bash build.sh
         env:
@@ -87,6 +105,7 @@ jobs:
           SOURCE_VERSION: ${{ needs.prepare.outputs.version }}
           SOURCE_REF: ${{ needs.prepare.outputs.ref }}
           SOURCE_COMMIT: ${{ needs.prepare.outputs.commit }}
+          SOURCE_KERNEL: ${{ toJSON(matrix.kernel) }}
           PREPARE_ONLY: ${{ inputs.configure_only && '1' || '0' }}
       - name: Upload firmware and configuration
         if: ${{ success() && !inputs.configure_only }}
@@ -109,3 +128,53 @@ jobs:
             immortalwrt/source.json
             immortalwrt/logs/
           include-hidden-files: true
+
+  publish:
+    name: Publish successful firmware downloads
+    needs: [prepare, firmware]
+    if: ${{ !cancelled() && needs.prepare.result == 'success' && needs.prepare.outputs.has_updates == 'true' && !inputs.configure_only }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: xzt8wrt-${{ needs.prepare.outputs.version }}-*
+          path: release-input
+      - name: Package separate downloads for each device
+        id: bundles
+        env:
+          KERNEL_BASELINE_JSON: ${{ needs.prepare.outputs.baseline }}
+        run: |
+          mkdir -p release-input release-output
+          python3 build-support.py bundle --input release-input --output release-output
+          if compgen -G 'release-output/*.zip' > /dev/null; then
+            echo 'available=true' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Publish firmware release
+        if: steps.bundles.outputs.available == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          BUILD_VERSION: ${{ needs.prepare.outputs.version }}
+          BUILD_COMMIT: ${{ github.sha }}
+          BUILD_RUN_ID: ${{ github.run_id }}
+          BUILD_SOURCE: ${{ needs.prepare.outputs.commit }}
+          BUILD_REPO: ${{ github.repository }}
+        run: |
+          TAG="build-$BUILD_RUN_ID"
+          cat > release-notes.md <<EOF
+          ImmortalWrt $BUILD_VERSION / xzt8wrt
+
+          Official source commit: $BUILD_SOURCE
+          Build: https://github.com/$BUILD_REPO/actions/runs/$BUILD_RUN_ID
+
+          Each ZIP is for one exact device, hardware layout and profile. Only successful build jobs are published; unavailable devices are not included.
+          Verify SHA256SUMS before use. Each ZIP includes images.json, source information, configuration and image checksums.
+          factory/initramfs/recovery/bootloader files are not generic intermediate firmware. Follow the specific device installation instructions. Build success does not imply hardware testing.
+          EOF
+          if ! gh release view "$TAG" > /dev/null 2>&1; then
+            gh release create "$TAG" --target "$BUILD_COMMIT" --title "xzt8wrt $BUILD_VERSION · build $BUILD_RUN_ID" --notes-file release-notes.md
+          fi
+          gh release upload "$TAG" release-output/* --clobber
