@@ -11,7 +11,11 @@ on:
         description: 'Platform group'
         type: choice
         default: all
-        options: [all, x86, rockchip, filogic]
+        options: [all, x86, rockchip, filogic, custom]
+      device:
+        description: 'ARM only: exact target/subtarget/device from the website (platform=custom)'
+        type: string
+        default: ''
       configure_only:
         description: 'Only validate targets and packages (no firmware)'
         type: boolean
@@ -41,6 +45,7 @@ jobs:
         env:
           SELECT_PLATFORM: ${{ inputs.platform || 'all' }}
           SELECT_PROFILE: ${{ inputs.profile || 'both' }}
+          SELECT_DEVICE: ${{ inputs.device }}
           SCHEDULED_CHECK: ${{ github.event_name == 'schedule' && '1' || '0' }}
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -63,8 +68,21 @@ jobs:
           spec.loader.exec_module(support)
           baseline = json.load(open('baseline/kernel-state.json'))
           kernels = {p: support.kernel_source(p, source['version']) for p in support.TARGETS}
-          jobs, skipped = support.build_plan(os.environ['SELECT_PLATFORM'], os.environ['SELECT_PROFILE'],
-                                            os.environ['SCHEDULED_CHECK'] == '1', baseline, kernels)
+          if os.environ['SELECT_PLATFORM'] == 'custom':
+              device = os.environ['SELECT_DEVICE']
+              selected, group = support.arm_selection(device)
+              profile = os.environ['SELECT_PROFILE']
+              profiles = (['full', 'lite'] if selected['full'] else ['lite']) if profile == 'both' else [profile]
+              for p in profiles:
+                  support.config('custom', p, device)
+              kernel = support.kernel_source('custom', source['version'], device)
+              jobs = [{'platform': 'custom', 'profile': p, 'device': device, 'kernel': kernel} for p in profiles]
+              skipped = []
+          else:
+              if os.environ['SELECT_DEVICE']:
+                  raise ValueError('device must be empty unless platform=custom')
+              jobs, skipped = support.build_plan(os.environ['SELECT_PLATFORM'], os.environ['SELECT_PROFILE'],
+                                                os.environ['SCHEDULED_CHECK'] == '1', baseline, kernels)
           with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
               for key, value in source.items():
                   out.write(f'{key}={value}\n')
@@ -102,6 +120,7 @@ jobs:
           JOBS: '2'
           PLATFORM: ${{ matrix.platform }}
           PROFILE: ${{ matrix.profile }}
+          DEVICE: ${{ matrix.device || '' }}
           SOURCE_VERSION: ${{ needs.prepare.outputs.version }}
           SOURCE_REF: ${{ needs.prepare.outputs.ref }}
           SOURCE_COMMIT: ${{ needs.prepare.outputs.commit }}
