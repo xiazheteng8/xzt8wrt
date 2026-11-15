@@ -67,6 +67,24 @@ class BuildSupportTests(unittest.TestCase):
             definition = support.arm_support.definition(group['target'])
             self.assertEqual(definition['config'], group['config'])
             self.assertEqual(definition['device_prefix'], group['config_prefix'])
+    def test_legacy_release_metadata_uses_compiled_kernel(self):
+        spec = importlib.util.spec_from_file_location('releases', support.ROOT / 'release-support.py')
+        releases = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(releases)
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            artifact = root / 'xzt8wrt-25.12.2-x86-lite'
+            artifact.mkdir()
+            (artifact / 'profiles.json').write_text(json.dumps({'linux_kernel': {'version': '6.12.103', 'release': '1'}}))
+            (root / 'xzt8wrt-diagnostics-full').mkdir()
+            self.assertEqual(releases.prepare_legacy(root, '123'), 1)
+            self.assertEqual(json.loads((artifact / 'kernel-source.json').read_text())['fingerprint'], '6.12.103-r1')
+            self.assertIn('did not record', (artifact / 'source-patches.diff').read_text())
+            marker = artifact / 'kernel-source.json'
+            original = marker.read_bytes()
+            releases.prepare_legacy(root, '123')
+            self.assertEqual(marker.read_bytes(), original)
+
     def test_independent_release_baselines_keep_newest_success(self):
         spec = importlib.util.spec_from_file_location('releases', support.ROOT / 'release-support.py')
         releases = importlib.util.module_from_spec(spec)

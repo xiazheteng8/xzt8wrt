@@ -472,3 +472,10 @@ Rust 1.96 的 LLVM CI 下载地址曾返回 404，导致高大全版失败。构
 真正的驱动源码、DTS 设备树与镜像定义，随官方稳定版源码下载到 `immortalwrt/target/linux/`。例如 Rockchip 在 `target/linux/rockchip/`，Filogic 在 `target/linux/mediatek/`，AP120C-AC 在 `target/linux/ipq40xx/`。软件包源通过官方 feeds 获取。
 
 R2S、R4S、R66S、R68S、TR3000、红米 AX6000 等当前已匹配机型先沿用官方设备定义，适配清单的补丁数组为空，这是使用官方驱动的明确状态；没有把空目录当作新增驱动。Kwrt 的额外机型仍需逐项迁移并验证，88 个待适配项仍未开放。构建产物会附带 `arm-adaptation.json` / `arm-adaptation.diff`，记录实际使用的适配层和修改。x86 不读取或应用 ARM 适配层。
+
+
+### 📤 把旧任务中已经成功的固件补发到网站
+
+旧工作流没有自动发布功能时，不需要重编译成功的固件：进入 **Actions → Publish completed builds → Run workflow**，在 `source_run` 填写原构建详情网址最后的数字（例如 `43650456373`），确认运行。此任务独立于固件编译队列，在云端读取该次构建的固件产物、校验镜像并按设备打包，再发布到 Releases。原构建即使整体红色，只要其中有成功固件包，也可以补发；失败任务的 diagnostics 不作为固件发布。
+
+请选本仓库 `main` 分支已结束的 **Build xzt8wrt** 任务。Artifacts 过期后无法补发，需要重新编译。旧构建缺失的内核记录从实际镜像元数据恢复，无法恢复的源码补丁差异会明确标注，不会伪造完整记录。

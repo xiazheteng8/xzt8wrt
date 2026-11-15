@@ -237,7 +237,7 @@ def bundle(input_dir, output):
                 for filename in ('.config', 'requested.config', 'source.json', 'source-version.txt',
                                  'feeds-version.txt', 'kernel-version.json', 'kernel-source.json', 'source-patches.diff'):
                     archive.write(directory / filename, filename)
-                for filename in ('arm-adaptation.json', 'arm-adaptation.diff'):
+                for filename in ('arm-adaptation.json', 'arm-adaptation.diff', 'legacy-build-metadata.json'):
                     if (directory / filename).is_file():
                         archive.write(directory / filename, filename)
                 archive.writestr('images.json', json.dumps(images, ensure_ascii=False, indent=2))
