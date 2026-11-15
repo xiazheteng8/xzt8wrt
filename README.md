@@ -14,6 +14,10 @@
 
 ## 🌐 网页选择设备与下载成品
 
+👉 **[打开 xzt8wrt 固件工坊](https://xiazheteng8.github.io/xzt8wrt/)**
+
+📡 **[直接选择 ALFA Network AP120C-AC 精简版](https://xiazheteng8.github.io/xzt8wrt/?device=ipq40xx%2Fgeneric%2Falfa-network_ap120c-ac&profile=lite)**。此链接只是预选设备和版本，不代表已有成品，也不会自动启动编译；可以在左侧切换其他型号。
+
 本仓库还提供一个静态“固件工坊”网站，源码在 `docs/index.html`。它可以搜索设备、查看精简 / 高大全版说明、查询真实已发布固件，并给出 GitHub 构建入口与参数。网页不会直接替你启动构建，需要在 GitHub 点击确认。
 
 **自己 Fork 后开启网站：** 进入 **Settings → Pages → Build and deployment**，选择 **Deploy from a branch**，分支选 `main`，目录选 `/docs`，点击 **Save**。等待 GitHub 完成 Pages 部署后，该页面会显示你的网站地址，通常为 `https://你的用户名.github.io/仓库名/`。网页会自动识别自己的仓库，也可以手动切换到自己的 Fork。
@@ -459,3 +463,12 @@ Rust 1.96 的 LLVM CI 下载地址曾返回 404，导致高大全版失败。构
 例如 `x86-lite` 已完成、`rockchip-full` 还在编译，x86 精简版会先发布并可供网站下载。每个成功任务使用独立的 Release，避免并行任务覆盖镜像、校验文件或成功记录。网站刷新后会从最近的发布中查找该设备与版本的镜像。
 
 当前批量任务仍按平台组编译：Rockchip 组内部需要该组选定设备均生成合格镜像后发布；`custom + device` 是单设备任务。配置验证不发布固件，失败或取消的任务不写成功基线。定时检查会合并各独立 Release 的最新成功内核记录，内核没变化仍然跳过。此流程从采用新工作流的下一次运行生效，已在运行或排队的旧任务不会自动切换。
+
+
+### 🌳 ARM 驱动树与设备适配目录
+
+本仓库的 ARM 适配入口在 [`devices/`](devices/README.md)，17 个目标的配置在 [`devices/targets.json`](devices/targets.json)。构建脚本实际读取这份配置，并在编译前检查、应用登记的本地补丁和文件覆盖。每项补丁必须绑定兼容的正式版本和 SHA256，失败就停止；设备专用改动必须通过 `custom + device` 单独构建，不能混入一整个批量平台。
+
+真正的驱动源码、DTS 设备树与镜像定义，随官方稳定版源码下载到 `immortalwrt/target/linux/`。例如 Rockchip 在 `target/linux/rockchip/`，Filogic 在 `target/linux/mediatek/`，AP120C-AC 在 `target/linux/ipq40xx/`。软件包源通过官方 feeds 获取。
+
+R2S、R4S、R66S、R68S、TR3000、红米 AX6000 等当前已匹配机型先沿用官方设备定义，适配清单的补丁数组为空，这是使用官方驱动的明确状态；没有把空目录当作新增驱动。Kwrt 的额外机型仍需逐项迁移并验证，88 个待适配项仍未开放。构建产物会附带 `arm-adaptation.json` / `arm-adaptation.diff`，记录实际使用的适配层和修改。x86 不读取或应用 ARM 适配层。

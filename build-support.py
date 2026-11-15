@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import urllib.request
 import zipfile
+import arm_support
 
 ROOT = pathlib.Path(__file__).resolve().parent
 REPO = 'https://github.com/immortalwrt/immortalwrt.git'
@@ -110,14 +111,20 @@ def config(platform, profile, device=''):
             raise ValueError('This flash router supports lite only')
         target, subtarget = selected['target'].split('/')
         devices = [selected['id']]
-        lines = list(group['config'])
-        prefix = group['config_prefix']
-        disk = group['soft']
+        adaptation = arm_support.definition(selected['target'])
+        lines = list(adaptation['config'])
+        prefix = adaptation['device_prefix']
+        disk = adaptation['disk_images']
     else:
         target, subtarget, devices = TARGETS[platform]
         lines = [f'CONFIG_TARGET_{target}=y', f'CONFIG_TARGET_{target}_{subtarget}=y']
         prefix = target + '_' + subtarget
         disk = platform != 'filogic'
+        if platform != 'x86':
+            adaptation = arm_support.definition(target + '/' + subtarget)
+            lines = list(adaptation['config'])
+            prefix = adaptation['device_prefix']
+            disk = adaptation['disk_images']
     if platform == 'filogic' and profile == 'full':
         raise ValueError('Filogic flash routers currently support lite only')
     if platform == 'x86':
@@ -179,6 +186,9 @@ def collect(platform, source, output, device=''):
             shutil.copy2(path, output / path.name)
     for name in ('.config', 'requested.config', 'source-version.txt', 'feeds-version.txt', 'source.json', 'kernel-source.json', 'source-patches.diff'):
         shutil.copy2(source / name, output / name)
+    for name in ('arm-adaptation.json', 'arm-adaptation.diff'):
+        if (source / name).is_file():
+            shutil.copy2(source / name, output / name)
     (output / 'kernel-version.json').write_text(json.dumps(metadata['linux_kernel'], indent=2) + '\n')
     (output / 'devices.json').write_text(json.dumps(devices, indent=2) + '\n')
     if selected:
@@ -227,6 +237,9 @@ def bundle(input_dir, output):
                 for filename in ('.config', 'requested.config', 'source.json', 'source-version.txt',
                                  'feeds-version.txt', 'kernel-version.json', 'kernel-source.json', 'source-patches.diff'):
                     archive.write(directory / filename, filename)
+                for filename in ('arm-adaptation.json', 'arm-adaptation.diff'):
+                    if (directory / filename).is_file():
+                        archive.write(directory / filename, filename)
                 archive.writestr('images.json', json.dumps(images, ensure_ascii=False, indent=2))
                 archive.writestr('xzt8wrt-sha256sums', '\n'.join(checksums) + '\n')
                 archive.writestr('READ-BEFORE-FLASHING.txt',
@@ -247,7 +260,7 @@ def bundle(input_dir, output):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('command', choices=['resolve', 'config', 'collect', 'bundle', 'kernel', 'fix-rust'])
+    parser.add_argument('command', choices=['resolve', 'config', 'collect', 'bundle', 'kernel', 'fix-rust', 'apply-arm'])
     parser.add_argument('--platform', choices=[*TARGETS, 'custom'], default='x86')
     parser.add_argument('--device', default=os.environ.get('DEVICE', ''))
     parser.add_argument('--profile', choices=['full', 'lite'], default='full')
@@ -262,6 +275,16 @@ def main():
         print(json.dumps(kernel_source(args.platform, args.version, args.device)))
     elif args.command == 'fix-rust':
         fix_rust_host(args.source)
+    elif args.command == 'apply-arm':
+        if args.platform == 'x86':
+            raise ValueError('ARM adaptations must never be applied to x86')
+        if args.device:
+            selected, _ = arm_selection(args.device)
+            target, devices = selected['target'], [selected['id']]
+        else:
+            target, subtarget, devices = TARGETS[args.platform]
+            target += '/' + subtarget
+        arm_support.prepare(args.source, target, args.version, devices)
     elif args.command == 'config':
         print(config(args.platform, args.profile, args.device), end='')
     elif args.command == 'collect':

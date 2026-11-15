@@ -12,6 +12,61 @@ spec.loader.exec_module(support)
 
 
 class BuildSupportTests(unittest.TestCase):
+    def test_arm_patch_validation_and_real_application(self):
+        arm = support.arm_support
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            adaptations = root / 'devices'
+            source = root / 'source'
+            adaptations.mkdir()
+            (source / 'target/linux/rockchip').mkdir(parents=True)
+            support.subprocess.run(['git', 'init', str(source)], check=True, capture_output=True)
+            driver = source / 'target/linux/rockchip/demo'
+            driver.write_text('before\n')
+            support.subprocess.run(['git', '-C', str(source), 'add', '.'], check=True)
+            content = ('diff --git a/target/linux/rockchip/demo b/target/linux/rockchip/demo\n'
+                       '--- a/target/linux/rockchip/demo\n+++ b/target/linux/rockchip/demo\n'
+                       '@@ -1 +1 @@\n-before\n+after\n')
+            (adaptations / 'test.patch').write_text(content)
+            entry = {'path': 'test.patch', 'sha256': hashlib.sha256(content.encode()).hexdigest(),
+                     'versions': ['25.12.2'], 'device': 'test-device'}
+            definition = {'upstream_tree': 'target/linux/rockchip', 'driver_source': 'official-stable',
+                          'patches': [entry], 'overlays': []}
+            def save():
+                (adaptations / 'targets.json').write_text(json.dumps({'schema': 1, 'targets': {'rockchip/armv8': definition}}))
+            save()
+            with patch.object(arm, 'ROOT', adaptations):
+                with self.assertRaises(ValueError):
+                    arm.prepare(source, 'rockchip/armv8', '26.1.0', ['test-device'])
+                with self.assertRaises(ValueError):
+                    arm.prepare(source, 'rockchip/armv8', '25.12.2', ['test-device', 'other-device'])
+                entry['sha256'] = '0'*64
+                save()
+                with self.assertRaises(ValueError):
+                    arm.prepare(source, 'rockchip/armv8', '25.12.2', ['test-device'])
+                self.assertEqual(driver.read_text(), 'before\n')
+                entry['sha256'] = hashlib.sha256(content.encode()).hexdigest()
+                save()
+                arm.prepare(source, 'rockchip/armv8', '25.12.2', ['test-device'])
+                self.assertEqual(driver.read_text(), 'after\n')
+                report = json.loads((source / 'arm-adaptation.json').read_text())
+                self.assertEqual(report['applied'][0]['sha256'], entry['sha256'])
+                self.assertIn('+after', (source / 'arm-adaptation.diff').read_text())
+                with self.assertRaises(ValueError):
+                    arm.local_file('../test.patch', entry['sha256'])
+                bad = content.replace('rockchip/demo', 'x86/demo')
+                (adaptations / 'test.patch').write_text(bad)
+                entry['sha256'] = hashlib.sha256(bad.encode()).hexdigest()
+                save()
+                with self.assertRaises(ValueError):
+                    arm.prepare(source, 'rockchip/armv8', '25.12.2', ['test-device'])
+
+    def test_arm_config_manifest_matches_catalog(self):
+        catalog = json.loads((support.ROOT / 'docs/catalog.json').read_text())
+        for group in catalog['groups'].values():
+            definition = support.arm_support.definition(group['target'])
+            self.assertEqual(definition['config'], group['config'])
+            self.assertEqual(definition['device_prefix'], group['config_prefix'])
     def test_independent_release_baselines_keep_newest_success(self):
         spec = importlib.util.spec_from_file_location('releases', support.ROOT / 'release-support.py')
         releases = importlib.util.module_from_spec(spec)

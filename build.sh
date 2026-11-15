@@ -18,6 +18,9 @@ if [[ ! -d "$SOURCE/.git" ]]; then
 fi
 cd "$SOURCE"
 [[ "$(git rev-parse HEAD)" == "$COMMIT" ]] || { echo "Source mismatch: use a fresh SOURCE_DIR for $REF" >&2; exit 1; }
+if [[ "$PLATFORM" != x86 ]]; then
+  python3 "$ROOT/build-support.py" apply-arm --platform "$PLATFORM" --source "$SOURCE" --version "$VERSION"
+fi
 ./scripts/feeds update -a
 ./scripts/feeds install -a
 python3 "$ROOT/build-support.py" fix-rust --source "$SOURCE"
