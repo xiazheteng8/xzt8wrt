@@ -1,0 +1,98 @@
+{
+  "repository": "xiazheteng8/xzt8wrt",
+  "releases": [
+    {
+      "tag_name": "recovered-43650456373",
+      "published_at": "2026-11-15T08:53:42Z",
+      "draft": false,
+      "prerelease": false,
+      "assets": [
+        {
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/recovered-43650456373/kernel-state.json",
+          "name": "kernel-state.json",
+          "size": 0
+        },
+        {
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/recovered-43650456373/SHA256SUMS",
+          "name": "SHA256SUMS",
+          "size": 0
+        },
+        {
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/recovered-43650456373/xzt8wrt-25.12.2-filogic-asus_tuf-ax6000-lite.zip",
+          "name": "xzt8wrt-25.12.2-filogic-asus_tuf-ax6000-lite.zip",
+          "size": 48700000
+        },
+        {
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/recovered-43650456373/xzt8wrt-25.12.2-filogic-cudy_tr3000-256mb-v1-lite.zip",
+          "name": "xzt8wrt-25.12.2-filogic-cudy_tr3000-256mb-v1-lite.zip",
+          "size": 48100000
+        },
+        {
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/recovered-43650456373/xzt8wrt-25.12.2-filogic-cudy_tr3000-v1-lite.zip",
+          "name": "xzt8wrt-25.12.2-filogic-cudy_tr3000-v1-lite.zip",
+          "size": 48100000
+        },
+        {
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/recovered-43650456373/xzt8wrt-25.12.2-filogic-cudy_tr3000-v1-ubootmod-lite.zip",
+          "name": "xzt8wrt-25.12.2-filogic-cudy_tr3000-v1-ubootmod-lite.zip",
+          "size": 50700000
+        },
+        {
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/recovered-43650456373/xzt8wrt-25.12.2-filogic-glinet_gl-mt3000-lite.zip",
+          "name": "xzt8wrt-25.12.2-filogic-glinet_gl-mt3000-lite.zip",
+          "size": 48100000
+        },
+        {
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/recovered-43650456373/xzt8wrt-25.12.2-filogic-glinet_gl-mt6000-lite.zip",
+          "name": "xzt8wrt-25.12.2-filogic-glinet_gl-mt6000-lite.zip",
+          "size": 104000000
+        },
+        {
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/recovered-43650456373/xzt8wrt-25.12.2-filogic-xiaomi_redmi-router-ax6000-stock-lite.zip",
+          "name": "xzt8wrt-25.12.2-filogic-xiaomi_redmi-router-ax6000-stock-lite.zip",
+          "size": 70500000
+        },
+        {
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/recovered-43650456373/xzt8wrt-25.12.2-filogic-xiaomi_redmi-router-ax6000-ubootmod-lite.zip",
+          "name": "xzt8wrt-25.12.2-filogic-xiaomi_redmi-router-ax6000-ubootmod-lite.zip",
+          "size": 73200000
+        },
+        {
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/recovered-43650456373/xzt8wrt-25.12.2-rockchip-friendlyarm_nanopi-r2s-lite.zip",
+          "name": "xzt8wrt-25.12.2-rockchip-friendlyarm_nanopi-r2s-lite.zip",
+          "size": 58400000
+        },
+        {
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/recovered-43650456373/xzt8wrt-25.12.2-rockchip-friendlyarm_nanopi-r4s-lite.zip",
+          "name": "xzt8wrt-25.12.2-rockchip-friendlyarm_nanopi-r4s-lite.zip",
+          "size": 58600000
+        },
+        {
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/recovered-43650456373/xzt8wrt-25.12.2-rockchip-friendlyarm_nanopi-r5s-lite.zip",
+          "name": "xzt8wrt-25.12.2-rockchip-friendlyarm_nanopi-r5s-lite.zip",
+          "size": 56300000
+        },
+        {
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/recovered-43650456373/xzt8wrt-25.12.2-rockchip-friendlyarm_nanopi-r6s-lite.zip",
+          "name": "xzt8wrt-25.12.2-rockchip-friendlyarm_nanopi-r6s-lite.zip",
+          "size": 56300000
+        },
+        {
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/recovered-43650456373/xzt8wrt-25.12.2-rockchip-lunzn_fastrhino-r66s-lite.zip",
+          "name": "xzt8wrt-25.12.2-rockchip-lunzn_fastrhino-r66s-lite.zip",
+          "size": 56200000
+        },
+        {
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/recovered-43650456373/xzt8wrt-25.12.2-rockchip-lunzn_fastrhino-r68s-lite.zip",
+          "name": "xzt8wrt-25.12.2-rockchip-lunzn_fastrhino-r68s-lite.zip",
+          "size": 56300000
+        },
+        {
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/recovered-43650456373/xzt8wrt-25.12.2-x86-generic-lite.zip",
+          "name": "xzt8wrt-25.12.2-x86-generic-lite.zip",
+          "size": 135000000
+        }
+      ]
+    }
+  ]
+}
