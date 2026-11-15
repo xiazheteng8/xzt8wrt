@@ -10,6 +10,7 @@ import subprocess
 import urllib.request
 import zipfile
 import arm_support
+import plugin_support
 
 ROOT = pathlib.Path(__file__).resolve().parent
 REPO = 'https://github.com/immortalwrt/immortalwrt.git'
@@ -35,14 +36,18 @@ def arm_selection(uid):
     return device, catalog['groups'][device['platform']]
 
 
-def resolve():
+def resolve(version=None):
     # Official releases are tags, not GitHub Releases/latest.
     with urllib.request.urlopen('https://downloads.immortalwrt.org/', timeout=60) as response:
         html = response.read().decode()
     versions = re.findall(r'href=["\'](?:\./)?releases/(\d+\.\d+\.\d+)/targets/', html)
     if not versions:
         raise RuntimeError('Official download page contains no stable release')
-    version = max(versions, key=lambda v: tuple(map(int, v.split('.'))))
+    if version and version != 'latest':
+        if version not in versions:
+            raise ValueError('Requested version is not an official formal stable release')
+    else:
+        version = max(versions, key=lambda v: tuple(map(int, v.split('.'))))
     ref = 'v' + version
     refs = subprocess.check_output(
         ['git', 'ls-remote', REPO, 'refs/tags/' + ref, 'refs/tags/' + ref + '^{}'], text=True)
@@ -146,6 +151,10 @@ def config(platform, profile, device=''):
         lines += ['# CONFIG_TARGET_ROOTFS_EXT4FS is not set', 'CONFIG_TARGET_ROOTFS_INITRAMFS=y']
     lines += (ROOT / 'seed.config').read_text().splitlines()
     lines += (ROOT / 'profiles' / (profile + '.config')).read_text().splitlines()
+    if os.environ.get('CUSTOM_MODE') == '1':
+        if profile != 'lite':
+            raise ValueError('Custom selections must use the lite base')
+        lines = plugin_support.source_config(lines, os.environ.get('CUSTOM_PLUGINS', ''))
     return '\n'.join(lines) + '\n'
 
 
@@ -186,7 +195,7 @@ def collect(platform, source, output, device=''):
             shutil.copy2(path, output / path.name)
     for name in ('.config', 'requested.config', 'source-version.txt', 'feeds-version.txt', 'source.json', 'kernel-source.json', 'source-patches.diff'):
         shutil.copy2(source / name, output / name)
-    for name in ('arm-adaptation.json', 'arm-adaptation.diff'):
+    for name in ('arm-adaptation.json', 'arm-adaptation.diff', 'custom-build.json'):
         if (source / name).is_file():
             shutil.copy2(source / name, output / name)
     (output / 'kernel-version.json').write_text(json.dumps(metadata['linux_kernel'], indent=2) + '\n')
@@ -217,14 +226,16 @@ def bundle(input_dir, output):
         selection = json.loads((directory / 'selection.json').read_text()) if (directory / 'selection.json').is_file() else None
         platform = selection['platform'] if selection else next(key for key, value in TARGETS.items()
                         if '/'.join(value[:2]) == metadata['target'])
-        state_key = selection['uid'] if selection else platform
+        custom = json.loads((directory / 'custom-build.json').read_text()) if (directory / 'custom-build.json').is_file() else None
+        state_key = 'custom/' + custom['signature'] if custom else selection['uid'] if selection else platform
         state[state_key + '/' + suffix] = json.loads((directory / 'kernel-source.json').read_text())
         for device in devices:
             images = metadata['profiles'][device]['images']
             if platform == 'x86':
                 images = [item for item in images if item.get('type') in ('combined', 'combined-efi')
                           and item['name'].endswith('.img.gz')]
-            name = f"xzt8wrt-{source['version']}-{platform}-{device}-{suffix}.zip"
+            flavor = "custom-" + custom["signature"] if custom else suffix
+            name = f"xzt8wrt-{source['version']}-{platform}-{device}-{flavor}.zip"
             with zipfile.ZipFile(output / name, 'w', compression=zipfile.ZIP_STORED) as archive:
                 checksums = []
                 for item in images:
@@ -237,7 +248,7 @@ def bundle(input_dir, output):
                 for filename in ('.config', 'requested.config', 'source.json', 'source-version.txt',
                                  'feeds-version.txt', 'kernel-version.json', 'kernel-source.json', 'source-patches.diff'):
                     archive.write(directory / filename, filename)
-                for filename in ('arm-adaptation.json', 'arm-adaptation.diff', 'legacy-build-metadata.json'):
+                for filename in ('arm-adaptation.json', 'arm-adaptation.diff', 'legacy-build-metadata.json', 'custom-build.json'):
                     if (directory / filename).is_file():
                         archive.write(directory / filename, filename)
                 archive.writestr('images.json', json.dumps(images, ensure_ascii=False, indent=2))
@@ -270,7 +281,7 @@ def main():
     parser.add_argument('--output', type=pathlib.Path)
     args = parser.parse_args()
     if args.command == 'resolve':
-        print(json.dumps(resolve()))
+        print(json.dumps(resolve(args.version)))
     elif args.command == 'kernel':
         print(json.dumps(kernel_source(args.platform, args.version, args.device)))
     elif args.command == 'fix-rust':

@@ -5,6 +5,8 @@ import pathlib
 import subprocess
 import tempfile
 import sys
+import re
+import hashlib
 
 SCHEDULED_KEYS = {'x86/full', 'x86/lite', 'rockchip/full', 'rockchip/lite', 'filogic/lite'}
 
@@ -35,6 +37,19 @@ def baseline():
         if SCHEDULED_KEYS <= result.keys():
             break
     return result
+
+
+def kernel_tag(state, scope=''):
+    fingerprints = sorted({value['fingerprint'] for value in state.values()})
+    if not fingerprints or any(not re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+-r[0-9]+', f) for f in fingerprints):
+        raise ValueError('Missing or invalid compiled kernel fingerprint')
+    if not scope:
+        platforms = sorted({key.rsplit('/', 1)[0] for key in state})
+        profiles = sorted({key.rsplit('/', 1)[1] for key in state})
+        scope = '-'.join(platforms + profiles)
+    if not re.fullmatch(r'[a-zA-Z0-9_.-]+', scope):
+        scope = 'custom-' + hashlib.sha256(scope.encode()).hexdigest()[:12]
+    return '_'.join(fingerprints) + '-' + scope
 
 
 def prepare_legacy(input_dir, run_id):
@@ -72,6 +87,8 @@ def prepare_legacy(input_dir, run_id):
 if __name__ == '__main__':
     if len(sys.argv) == 1 or sys.argv[1] == 'baseline':
         print(json.dumps(baseline()))
+    elif sys.argv[1] == 'tag':
+        print(kernel_tag(json.loads(pathlib.Path(sys.argv[2]).read_text()), sys.argv[3] if len(sys.argv) > 3 else ''))
     elif sys.argv[1] == 'legacy':
         print(prepare_legacy(pathlib.Path(sys.argv[2]), sys.argv[3]))
     else:

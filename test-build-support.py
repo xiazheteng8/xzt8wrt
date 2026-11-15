@@ -12,6 +12,41 @@ spec.loader.exec_module(support)
 
 
 class BuildSupportTests(unittest.TestCase):
+    def test_public_release_policy_filters_devices_and_custom_files(self):
+        spec=importlib.util.spec_from_file_location('aggregate',support.ROOT/'aggregate.py')
+        aggregate=importlib.util.module_from_spec(spec);spec.loader.exec_module(aggregate)
+        devices=json.loads((support.ROOT/'docs/release-devices.json').read_text())['devices']
+        self.assertEqual(len(devices),15)
+        self.assertEqual(aggregate.key_for_asset('xzt8wrt-25.12.2-x86-generic-lite-vmdk.zip',devices),'x86/lite')
+        self.assertIsNone(aggregate.key_for_asset('xzt8wrt-25.12.2-ipq40xx-generic-alfa-network_ap120c-ac-lite.zip',devices))
+        self.assertIsNone(aggregate.key_for_asset('xzt8wrt-25.12.2-x86-generic-custom-abc.zip',devices))
+        self.assertTrue(support.plugin_support.release_allowed('x86/64/generic'))
+        self.assertFalse(support.plugin_support.release_allowed('ipq40xx/generic/alfa-network_ap120c-ac'))
+
+    def test_custom_plugin_allowlist_and_fixed_presets(self):
+        import plugin_support as plugins
+        names=plugins.selection('luci-app-ssr-plus,luci-app-passwall2,luci-app-ssr-plus')
+        self.assertEqual(names,['luci-app-passwall2','luci-app-ssr-plus'])
+        with self.assertRaises(ValueError):plugins.selection('luci-app-passwall;echo pwned')
+        self.assertEqual(plugins.identity('x86/64/generic',names),plugins.identity('x86/64/generic',list(reversed(names))))
+        before=support.config('x86','lite')
+        with patch.dict(support.os.environ,{'CUSTOM_MODE':'1','CUSTOM_PLUGINS':','.join(names)}):
+            custom=support.config('x86','lite')
+        self.assertIn('CONFIG_PACKAGE_luci-app-passwall2=y',custom)
+        self.assertIn('CONFIG_PACKAGE_luci-app-ssr-plus=y',custom)
+        self.assertIn('# CONFIG_PACKAGE_luci-app-passwall is not set',custom)
+        self.assertNotIn('CONFIG_PACKAGE_luci-app-passwall=y',custom)
+        self.assertEqual(before,support.config('x86','lite'))
+        keys=[line.split('=')[0] for line in custom.splitlines() if line.startswith('CONFIG_')]
+        self.assertEqual(len(keys),len(set(keys)))
+
+    def test_kernel_release_tag_is_readable(self):
+        spec=importlib.util.spec_from_file_location('releases',support.ROOT/'release-support.py')
+        releases=importlib.util.module_from_spec(spec);spec.loader.exec_module(releases)
+        state={'x86/full':{'fingerprint':'6.12.103-r1'}}
+        self.assertEqual(releases.kernel_tag(state,'x86-full'),'6.12.103-r1-x86-full')
+        with self.assertRaises(ValueError):releases.kernel_tag({'x86/full':{'fingerprint':'unknown'}})
+
     def test_arm_patch_validation_and_real_application(self):
         arm = support.arm_support
         with tempfile.TemporaryDirectory() as temporary:
