@@ -12,6 +12,48 @@ spec.loader.exec_module(support)
 
 
 class BuildSupportTests(unittest.TestCase):
+    def test_arm_catalog_is_allowlisted_and_keeps_x86_separate(self):
+        catalog = json.loads((support.ROOT / 'docs/catalog.json').read_text())
+        for device in catalog['devices']:
+            config = support.config('custom', 'lite', device['uid'])
+            self.assertNotIn('CONFIG_TARGET_x86', config)
+            self.assertNotIn('CONFIG_GRUB_', config)
+            self.assertNotIn('CONFIG_PACKAGE_kmod-igc', config)
+            group = catalog['groups'][device['platform']]
+            self.assertIn('CONFIG_TARGET_DEVICE_' + group['config_prefix'] + '_DEVICE_' + device['id'] + '=y', config)
+            if not device['full']:
+                self.assertNotIn('CONFIG_TARGET_ROOTFS_PARTSIZE=', config)
+                with self.assertRaises(ValueError):
+                    support.config('custom', 'full', device['uid'])
+        with self.assertRaises(ValueError):
+            support.config('custom', 'lite', 'x86/64/generic')
+        with self.assertRaises(ValueError):
+            support.config('x86', 'lite', catalog['devices'][0]['uid'])
+
+    def test_custom_device_collection_does_not_stamp_whole_platform(self):
+        catalog = json.loads((support.ROOT / 'docs/catalog.json').read_text())
+        selected = next(d for d in catalog['devices'] if d['platform'] == 'sunxi-cortexa53')
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            source = root / 'source'
+            directory = source / 'bin/targets' / selected['target']
+            directory.mkdir(parents=True)
+            name = selected['id'] + '-sdcard.img.gz'
+            (directory / name).write_bytes(b'image')
+            metadata = {'target': selected['target'], 'linux_kernel': {'version': 'test'}, 'profiles': {
+                selected['id']: {'images': [{'name': name, 'type': 'sdcard', 'sha256': hashlib.sha256(b'image').hexdigest()}]}}}
+            (directory / 'profiles.json').write_text(json.dumps(metadata))
+            for filename in ('.config', 'requested.config', 'source-version.txt', 'feeds-version.txt', 'source.json', 'kernel-source.json', 'source-patches.diff'):
+                value = {'ref': 'vtest', 'version': 'test', 'commit': 'a'*40} if filename == 'source.json' else {'fingerprint': 'test'}
+                (source / filename).write_text(json.dumps(value))
+            artifact = root / 'artifacts/custom-lite'
+            support.collect('custom', source, artifact, selected['uid'])
+            with patch.dict(support.os.environ, {'KERNEL_BASELINE_JSON': '{"x86/lite":{"fingerprint":"keep"}}'}):
+                self.assertEqual(support.bundle(root / 'artifacts', root / 'release'), 1)
+            state = json.loads((root / 'release/kernel-state.json').read_text())
+            self.assertEqual(set(state), {'x86/lite', selected['uid'] + '/lite'})
+            self.assertEqual(state['x86/lite']['fingerprint'], 'keep')
+
     def test_configs_separate_architectures(self):
         for platform in support.TARGETS:
             for profile in ('full', 'lite'):

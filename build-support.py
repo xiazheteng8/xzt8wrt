@@ -2,6 +2,7 @@
 import argparse
 import hashlib
 import json
+import os
 import pathlib
 import re
 import shutil
@@ -24,6 +25,15 @@ TARGETS = {
 }
 
 
+def arm_selection(uid):
+    """Only accept exact ARM profiles matched to the official stable inventory."""
+    catalog = json.loads((ROOT / 'docs/catalog.json').read_text())
+    device = next((d for d in catalog['devices'] if d['uid'] == uid), None)
+    if device is None:
+        raise ValueError('Unknown ARM device. Copy the exact device value from the website.')
+    return device, catalog['groups'][device['platform']]
+
+
 def resolve():
     # Official releases are tags, not GitHub Releases/latest.
     with urllib.request.urlopen('https://downloads.immortalwrt.org/', timeout=60) as response:
@@ -42,8 +52,12 @@ def resolve():
     return {'version': version, 'ref': ref, 'commit': commit}
 
 
-def kernel_source(platform, version):
-    target, subtarget, _ = TARGETS[platform]
+def kernel_source(platform, version, device=''):
+    if device:
+        selected, _ = arm_selection(device)
+        target, subtarget = selected['target'].split('/')
+    else:
+        target, subtarget, _ = TARGETS[platform]
     url = f'https://downloads.immortalwrt.org/releases/{version}/targets/{target}/{subtarget}/profiles.json'
     with urllib.request.urlopen(url, timeout=60) as response:
         metadata = json.load(response)
@@ -87,11 +101,25 @@ def fix_rust_host(source):
     (source / 'source-patches.diff').write_text(result.stdout)
 
 
-def config(platform, profile):
-    target, subtarget, devices = TARGETS[platform]
+def config(platform, profile, device=''):
+    if device:
+        if platform != 'custom':
+            raise ValueError('ARM device requires platform=custom; x86 configuration is unchanged')
+        selected, group = arm_selection(device)
+        if profile == 'full' and not selected['full']:
+            raise ValueError('This flash router supports lite only')
+        target, subtarget = selected['target'].split('/')
+        devices = [selected['id']]
+        lines = list(group['config'])
+        prefix = group['config_prefix']
+        disk = group['soft']
+    else:
+        target, subtarget, devices = TARGETS[platform]
+        lines = [f'CONFIG_TARGET_{target}=y', f'CONFIG_TARGET_{target}_{subtarget}=y']
+        prefix = target + '_' + subtarget
+        disk = platform != 'filogic'
     if platform == 'filogic' and profile == 'full':
         raise ValueError('Filogic flash routers currently support lite only')
-    lines = [f'CONFIG_TARGET_{target}=y', f'CONFIG_TARGET_{target}_{subtarget}=y']
     if platform == 'x86':
         lines += ['CONFIG_TARGET_x86_64_DEVICE_generic=y', 'CONFIG_GRUB_IMAGES=y',
                   'CONFIG_GRUB_EFI_IMAGES=y']
@@ -101,9 +129,9 @@ def config(platform, profile):
     else:
         lines += ['CONFIG_TARGET_MULTI_PROFILE=y', 'CONFIG_TARGET_PER_DEVICE_ROOTFS=y',
                   '# CONFIG_TARGET_ALL_PROFILES is not set']
-        lines += [f'CONFIG_TARGET_DEVICE_{target}_{subtarget}_DEVICE_{d}=y' for d in devices]
+        lines += [f'CONFIG_TARGET_DEVICE_{prefix}_DEVICE_{d}=y' for d in devices]
     lines += ['CONFIG_TARGET_ROOTFS_SQUASHFS=y']
-    if platform != 'filogic':
+    if disk:
         lines += ['CONFIG_TARGET_ROOTFS_EXT4FS=y', 'CONFIG_TARGET_IMAGES_GZIP=y',
                   'CONFIG_TARGET_KERNEL_PARTSIZE=64',
                   f'CONFIG_TARGET_ROOTFS_PARTSIZE={2048 if profile == "full" else 512}']
@@ -114,14 +142,24 @@ def config(platform, profile):
     return '\n'.join(lines) + '\n'
 
 
-def collect(platform, source, output):
-    target, subtarget, devices = TARGETS[platform]
+def collect(platform, source, output, device=''):
+    selected = None
+    if device:
+        selected, _ = arm_selection(device)
+        target, subtarget = selected['target'].split('/')
+        devices = [selected['id']]
+    else:
+        target, subtarget, devices = TARGETS[platform]
     directory = source / 'bin' / 'targets' / target / subtarget
     metadata = json.loads((directory / 'profiles.json').read_text())
     # make can skip oversized images without failing. Require every device.
     for device in devices:
         images = metadata['profiles'].get(device, {}).get('images', [])
         upgrades = [item for item in images if item.get('type') == 'sysupgrade']
+        if selected:
+            primary = {'sysupgrade', 'nand-sysupgrade', 'WN573HX3-sysupgrade', 'sdcard',
+                       'combined-efi', 'trx', 'bin', 'firmware'}
+            upgrades = [item for item in images if item.get('type') in primary]
         if platform == 'x86':
             upgrades = [item for item in images if item.get('type') in ('combined', 'combined-efi')
                         and item['name'].endswith('.img.gz')]
@@ -143,6 +181,8 @@ def collect(platform, source, output):
         shutil.copy2(source / name, output / name)
     (output / 'kernel-version.json').write_text(json.dumps(metadata['linux_kernel'], indent=2) + '\n')
     (output / 'devices.json').write_text(json.dumps(devices, indent=2) + '\n')
+    if selected:
+        (output / 'selection.json').write_text(json.dumps(selected, indent=2) + '\n')
     sums = []
     for path in sorted(output.iterdir()):
         if path.is_file():
@@ -164,9 +204,11 @@ def bundle(input_dir, output):
         suffix = directory.name.rsplit('-', 1)[-1]
         if suffix not in ('full', 'lite'):
             raise RuntimeError('Invalid artifact profile: ' + directory.name)
-        platform = next(key for key, value in TARGETS.items()
+        selection = json.loads((directory / 'selection.json').read_text()) if (directory / 'selection.json').is_file() else None
+        platform = selection['platform'] if selection else next(key for key, value in TARGETS.items()
                         if '/'.join(value[:2]) == metadata['target'])
-        state[platform + '/' + suffix] = json.loads((directory / 'kernel-source.json').read_text())
+        state_key = selection['uid'] if selection else platform
+        state[state_key + '/' + suffix] = json.loads((directory / 'kernel-source.json').read_text())
         for device in devices:
             images = metadata['profiles'][device]['images']
             if platform == 'x86':
@@ -206,7 +248,8 @@ def bundle(input_dir, output):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('command', choices=['resolve', 'config', 'collect', 'bundle', 'kernel', 'fix-rust'])
-    parser.add_argument('--platform', choices=TARGETS, default='x86')
+    parser.add_argument('--platform', choices=[*TARGETS, 'custom'], default='x86')
+    parser.add_argument('--device', default=os.environ.get('DEVICE', ''))
     parser.add_argument('--profile', choices=['full', 'lite'], default='full')
     parser.add_argument('--version')
     parser.add_argument('--source', type=pathlib.Path)
@@ -216,13 +259,13 @@ def main():
     if args.command == 'resolve':
         print(json.dumps(resolve()))
     elif args.command == 'kernel':
-        print(json.dumps(kernel_source(args.platform, args.version)))
+        print(json.dumps(kernel_source(args.platform, args.version, args.device)))
     elif args.command == 'fix-rust':
         fix_rust_host(args.source)
     elif args.command == 'config':
-        print(config(args.platform, args.profile), end='')
+        print(config(args.platform, args.profile, args.device), end='')
     elif args.command == 'collect':
-        collect(args.platform, args.source, args.output)
+        collect(args.platform, args.source, args.output, args.device)
     else:
         bundle(args.input, args.output)
 
