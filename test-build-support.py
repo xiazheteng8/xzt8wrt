@@ -12,6 +12,20 @@ spec.loader.exec_module(support)
 
 
 class BuildSupportTests(unittest.TestCase):
+    def test_independent_release_baselines_keep_newest_success(self):
+        spec = importlib.util.spec_from_file_location('releases', support.ROOT / 'release-support.py')
+        releases = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(releases)
+        states = [{'x86/lite': {'fingerprint': 'new'}},
+                  {'rockchip/full': {'fingerprint': 'new-arm'}},
+                  {'x86/lite': {'fingerprint': 'old'}, 'x86/full': {'fingerprint': 'old-full'}}]
+        merged = releases.merge_newest_first(states)
+        self.assertEqual(merged['x86/lite']['fingerprint'], 'new')
+        self.assertEqual(merged['x86/full']['fingerprint'], 'old-full')
+        self.assertEqual(merged['rockchip/full']['fingerprint'], 'new-arm')
+        self.assertNotIn('filogic/lite', merged)
+        self.assertEqual(releases.merge_newest_first([]), {})
+
     def test_arm_catalog_is_allowlisted_and_keeps_x86_separate(self):
         catalog = json.loads((support.ROOT / 'docs/catalog.json').read_text())
         for device in catalog['devices']:
