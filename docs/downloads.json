@@ -2,6 +2,29 @@
   "repository": "xiazheteng8/xzt8wrt",
   "releases": [
     {
+      "tag_name": "build-43696990095-x86-full",
+      "published_at": "2026-11-15T12:46:53Z",
+      "draft": false,
+      "prerelease": false,
+      "assets": [
+        {
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/build-43696990095-x86-full/kernel-state.json",
+          "name": "kernel-state.json",
+          "size": 0
+        },
+        {
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/build-43696990095-x86-full/SHA256SUMS",
+          "name": "SHA256SUMS",
+          "size": 0
+        },
+        {
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/build-43696990095-x86-full/xzt8wrt-25.12.2-x86-generic-full.zip",
+          "name": "xzt8wrt-25.12.2-x86-generic-full.zip",
+          "size": 0
+        }
+      ]
+    },
+    {
       "tag_name": "recovered-43650456373",
       "published_at": "2026-11-15T08:53:42Z",
       "draft": false,
