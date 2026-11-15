@@ -78,27 +78,12 @@ jobs:
           python3 release-support.py legacy release-input "$SOURCE_RUN"
           python3 build-support.py bundle --input release-input --output release-output
           compgen -G 'release-output/*.zip' > /dev/null
-      - name: Publish verified firmware, then record success
+      - name: 汇总并发布中文发行说明
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          SOURCE_RUN: ${{ inputs.source_run }}
         run: |
-          TAG="recovered-$SOURCE_RUN"
-          cat > release-notes.md <<EOF
-          Successful firmware recovered from https://github.com/$GH_REPO/actions/runs/$SOURCE_RUN
-
-          Original build configuration commit: $SOURCE_COMMIT
-          The release tag points to the publication branch; original firmware provenance remains in each ZIP.
-
-          Only successful firmware artifacts are packaged; failed-job diagnostics are excluded.
-          Each ZIP targets one exact device/layout/profile. Verify SHA256SUMS before flashing.
-          Legacy kernel metadata is reconstructed from compiled profiles.json. Older builds did not record source patch diffs; this limitation is documented inside each affected ZIP.
-          Build success does not imply hardware testing. Follow the device installation instructions.
-          EOF
-          if ! gh release view "$TAG" > /dev/null 2>&1; then
-            gh release create "$TAG" --target main --title "xzt8wrt · successful firmware from run $SOURCE_RUN" --notes-file release-notes.md
-          fi
-          gh release upload "$TAG" release-output/*.zip release-output/SHA256SUMS --clobber
-          gh release upload "$TAG" release-output/kernel-state.json --clobber
-          echo "Published: https://github.com/$GH_REPO/releases/tag/$TAG" >> "$GITHUB_STEP_SUMMARY"
+          sudo apt-get update
+          sudo apt-get install -y qemu-utils
+          python3 vm-images.py release-input release-output
+          python3 aggregate.py release-output

@@ -16,6 +16,10 @@ on:
         description: 'ARM only: exact target/subtarget/device from the website (platform=custom)'
         type: string
         default: ''
+      version:
+        description: 'Official stable version or latest'
+        type: string
+        default: latest
       configure_only:
         description: 'Only validate targets and packages (no firmware)'
         type: boolean
@@ -45,6 +49,7 @@ jobs:
           SELECT_PLATFORM: ${{ inputs.platform || 'all' }}
           SELECT_PROFILE: ${{ inputs.profile || 'both' }}
           SELECT_DEVICE: ${{ inputs.device }}
+          SELECT_VERSION: ${{ inputs.version || 'latest' }}
           SCHEDULED_CHECK: ${{ github.event_name == 'schedule' && '1' || '0' }}
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -52,7 +57,7 @@ jobs:
           python3 test-build-support.py
           mkdir -p baseline
           python3 release-support.py baseline > baseline/kernel-state.json
-          python3 build-support.py resolve > source.json
+          python3 build-support.py resolve --version "$SELECT_VERSION" > source.json
           python3 - <<'PY'
           import json, os
           source = json.load(open('source.json'))
@@ -130,44 +135,13 @@ jobs:
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 14
-      - name: Package this successful build immediately
-        if: ${{ success() && !inputs.configure_only }}
-        run: |
-          mkdir -p release-output
-          python3 build-support.py bundle --input artifacts --output release-output
-          compgen -G 'release-output/*.zip' > /dev/null
-      - name: Publish this build without waiting for other jobs
-        if: ${{ success() && !inputs.configure_only }}
+      - name: Notify immediate publication of completed firmware
+        if: ${{ success() && !inputs.configure_only && matrix.platform != 'custom' }}
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          BUILD_VERSION: ${{ needs.prepare.outputs.version }}
-          BUILD_COMMIT: ${{ github.sha }}
-          BUILD_RUN_ID: ${{ github.run_id }}
-          BUILD_SOURCE: ${{ needs.prepare.outputs.commit }}
-          BUILD_PLATFORM: ${{ matrix.platform }}
-          BUILD_PROFILE: ${{ matrix.profile }}
-        run: |
-          TAG="build-$BUILD_RUN_ID-$BUILD_PLATFORM-$BUILD_PROFILE"
-          cat > release-notes.md <<EOF
-          ImmortalWrt $BUILD_VERSION / xzt8wrt / $BUILD_PLATFORM / $BUILD_PROFILE
-
-          This successful build is published immediately, independently of other matrix jobs.
-          Official source commit: $BUILD_SOURCE
-          Build configuration commit: $BUILD_COMMIT
-          Release tag points to the publication branch; original firmware provenance remains in each ZIP.
-          Build: https://github.com/$GH_REPO/actions/runs/$BUILD_RUN_ID
-
-          Each ZIP is for one exact device, hardware layout and profile. Verify SHA256SUMS before use.
-          factory/initramfs/recovery/bootloader files are not generic intermediate firmware.
-          Follow the specific device installation instructions. Build success does not imply hardware testing.
-          EOF
-          if ! gh release view "$TAG" > /dev/null 2>&1; then
-            gh release create "$TAG" --target main --title "xzt8wrt $BUILD_VERSION · $BUILD_PLATFORM-$BUILD_PROFILE · $BUILD_RUN_ID" --notes-file release-notes.md
-          fi
-          gh release upload "$TAG" release-output/*.zip release-output/SHA256SUMS --clobber
-          # Commit the success marker only after every firmware asset was uploaded.
-          gh release upload "$TAG" release-output/kernel-state.json --clobber
+          SOURCE_RUN: ${{ github.run_id }}
+        run: gh api "repos/$GH_REPO/dispatches" --method POST -f event_type=firmware-ready -f "client_payload[run_id]=$SOURCE_RUN"
       - name: Upload diagnostics or configuration validation
         if: ${{ !cancelled() && (failure() || inputs.configure_only) }}
         uses: actions/upload-artifact@v4

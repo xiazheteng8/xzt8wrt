@@ -1,0 +1,120 @@
+name: Customize firmware
+on:
+  workflow_dispatch:
+    inputs:
+      device:
+        description: 'Exact target/subtarget/device ID copied from the website'
+        required: true
+        default: x86/64/generic
+        type: string
+      plugins:
+        description: 'Comma-separated supported package IDs; WOL/DDNS-GO/LuCI remain included'
+        default: luci-app-passwall2,luci-app-ssr-plus
+        type: string
+      version:
+        description: 'Official stable version or latest'
+        type: string
+        default: latest
+      method:
+        description: 'auto: prebuilt ImageBuilder first, fall back to source when unavailable/failing'
+        type: choice
+        default: auto
+        options: [auto, fast, source]
+      configure_only:
+        description: 'Source mode: check configuration only, no firmware'
+        type: boolean
+        default: false
+permissions:
+  contents: write
+concurrency:
+  group: custom-${{ github.run_id }}
+  cancel-in-progress: false
+jobs:
+  customize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate device, plugins and official ImageBuilder
+        id: plan
+        env:
+          SELECT_DEVICE: ${{ inputs.device }}
+          SELECT_PLUGINS: ${{ inputs.plugins }}
+          SELECT_VERSION: ${{ inputs.version }}
+        run: python3 custom-build.py plan
+      - name: Install builder dependencies
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache
+          sudo apt-get update
+          sudo apt-get install -y build-essential clang flex bison g++ gawk gcc-multilib g++-multilib gettext git libncurses-dev libssl-dev python3 python3-setuptools python3-pyelftools rsync swig unzip zlib1g-dev file wget curl patch diffutils tar xz-utils zstd libelf-dev cmake ninja-build qemu-utils
+      - name: Assemble official prebuilt components
+        id: fast
+        if: inputs.method != 'source' && steps.plan.outputs.fast == 'true' && !inputs.configure_only
+        continue-on-error: true
+        run: python3 custom-build.py fast
+      - name: Compile custom selection from source when needed
+        if: inputs.method == 'source' || inputs.configure_only || (inputs.method == 'auto' && steps.fast.outcome != 'success')
+        env:
+          PLATFORM: ${{ steps.plan.outputs.platform }}
+          DEVICE: ${{ steps.plan.outputs.device }}
+          PROFILE: lite
+          CUSTOM_MODE: '1'
+          CUSTOM_DEVICE: ${{ inputs.device }}
+          CUSTOM_PLUGINS: ${{ inputs.plugins }}
+          SOURCE_VERSION: ${{ steps.plan.outputs.version }}
+          SOURCE_REF: ${{ steps.plan.outputs.ref }}
+          SOURCE_COMMIT: ${{ steps.plan.outputs.commit }}
+          PREPARE_ONLY: ${{ inputs.configure_only && '1' || '0' }}
+        run: |
+          rm -rf release-output
+          bash build.sh
+          if [ "$PREPARE_ONLY" != 1 ]; then
+            python3 build-support.py bundle --input artifacts --output release-output
+          fi
+      - name: Verify actual firmware exists
+        if: ${{ !inputs.configure_only }}
+        run: |
+          compgen -G 'release-output/*.zip' > /dev/null || { echo 'No firmware generated. Use method=source if fast mode lacks packages or exceeds image size.'; exit 1; }
+      - name: Generate verified virtual disk variants
+        if: ${{ success() && !inputs.configure_only }}
+        run: |
+          if [ -d artifacts ]; then
+            python3 vm-images.py artifacts release-output
+          else
+            python3 vm-images.py imagebuilder/bin/targets release-output
+          fi
+      - name: Publish this exact custom selection
+        if: ${{ success() && !inputs.configure_only && steps.plan.outputs.publish == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SIGNATURE: ${{ steps.plan.outputs.signature }}
+          CUSTOM_DEVICE: ${{ inputs.device }}
+          CUSTOM_PLUGINS: ${{ inputs.plugins }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          TAG="$(python3 release-support.py tag release-output/kernel-state.json "custom-$SIGNATURE")-$(TZ=Asia/Shanghai date +%Y%m%d-%H%M%S)"
+          cat > custom-notes.md <<EOF
+          自选固件设备：$CUSTOM_DEVICE
+          勾选插件：$CUSTOM_PLUGINS
+          构建记录：https://github.com/$GH_REPO/actions/runs/$RUN_ID
+          请核对 SHA256SUMS、完整型号和引导布局。构建成功不代表已实机验证。
+          标签对应发布分支，实际固件源码和组件信息保存在各 ZIP 中。
+          EOF
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" --target main --title "xzt8wrt · $TAG" --notes-file custom-notes.md
+          fi
+          gh release upload "$TAG" release-output/*.zip release-output/SHA256SUMS --clobber
+          gh release upload "$TAG" release-output/kernel-state.json --clobber
+          echo "Published: https://github.com/$GH_REPO/releases/tag/$TAG" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: custom-${{ steps.plan.outputs.signature }}
+          path: |
+            release-output/
+            custom-plan.json
+            immortalwrt/.config
+            immortalwrt/custom-build.json
+            immortalwrt/logs/
+          include-hidden-files: true
