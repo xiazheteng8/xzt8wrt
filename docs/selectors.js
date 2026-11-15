@@ -28,13 +28,17 @@ function syncSelectors(){
 function versionMatches(asset){return chosenVersion==='latest'||asset.name.startsWith('xzt8wrt-'+chosenVersion+'-')}
 renderDownload=function(){
  if(popularPolicy&&!isPopular()){emptyDownload('此型号仅提供自行构建教程','不纳入本站固定 Releases；请 Fork 后按型号参数运行。构建产物在自己的 Actions 中下载。');return}
- if(imageFormat==='img'){const saved=releases;releases=releases.map(r=>({...r,assets:(r.assets||[]).filter(versionMatches)}));try{return earlierDownload()}finally{releases=saved}}
+ if(imageFormat==='img'&&selected.platform!=='x86'){const saved=releases;releases=releases.map(r=>({...r,assets:(r.assets||[]).filter(versionMatches)}));try{return earlierDownload()}finally{releases=saved}}
  if(!releaseLoaded){emptyDownload('正在查询虚拟机镜像…','只展示已实际生成的镜像。');return}if(releaseError){emptyDownload('暂时无法读取下载列表',releaseError);return}
  if(customMode&&!signature){emptyDownload('正在匹配插件组合…','请稍候');return}
- const suffix=`-x86-generic-${customMode?'custom-'+signature:profile}-${imageFormat}.zip`;
- const found=releases.flatMap(r=>(r.assets||[]).map(a=>({asset:a,release:r}))).find(v=>versionMatches(v.asset)&&v.asset.name.endsWith(suffix));
- if(!found){emptyDownload('暂无匹配的 '+imageFormat.toUpperCase()+' 成品','正在补充虚拟机镜像。可以等待本轮发布，或在自己的仓库构建。');return}
- const box=document.createElement('div');box.className='download-item';const title=document.createElement('strong');title.textContent='x86 · '+imageFormat.toUpperCase()+' · '+(customMode?'自选插件':profile==='full'?'高大全版':'精简版');const note=document.createElement('p');note.textContent='包含 BIOS/EFI 版本（以包内实际文件为准），按虚拟机启动方式选择。';const a=document.createElement('a');a.className='primary';a.href=found.asset.browser_download_url;a.target='_blank';a.rel='noopener';a.textContent='下载虚拟机镜像包 ↓';box.append(title,note,a);$('download-result').replaceChildren(box);
+ const stem=`-x86-generic-${customMode?'custom-'+signature:profile==='full'?'高大全版':'精简版'}-${imageFormat}-`;
+ const candidates=releases.flatMap(r=>(r.assets||[]).map(a=>({asset:a,release:r}))).filter(v=>versionMatches(v.asset)&&v.asset.name.includes(stem)&&/-(bios|uefi)-(squashfs|ext4)\.zip$/.test(v.asset.name));
+ const seen=new Set();const found=candidates.filter(v=>{const key=v.asset.name.split(stem)[1];if(seen.has(key))return false;seen.add(key);return true});
+ if(!found.length){emptyDownload('暂无独立的 '+imageFormat.toUpperCase()+' 镜像','正在生成分开的镜像下载；请稍后刷新。');return}
+ const box=document.createElement('div');box.className='download-item';
+ for(const {asset} of found){const boot=asset.name.includes('-uefi-')?'UEFI':'BIOS';const fs=asset.name.includes('-squashfs.')?'SquashFS':'ext4';const a=document.createElement('a');a.className='primary';a.style.marginBottom='8px';a.href=asset.browser_download_url;a.target='_blank';a.rel='noopener';a.textContent=`下载 ${imageFormat.toUpperCase()} · ${boot} · ${fs} ↓`;box.append(a)}
+ const note=document.createElement('p');note.textContent='每个下载包只有对应的一份镜像，按需要选一个即可。';box.append(note);$('download-result').replaceChildren(box);
+
 };
 render=function(){earlierRender();syncSelectors();renderDownload()};
 $('platform-select').addEventListener('change',()=>{platformFilter=$('platform-select').value;const d=DEVICES.find(d=>!platformFilter||d.platform===platformFilter);if(d)selected=d;render()});
