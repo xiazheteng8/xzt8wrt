@@ -42,6 +42,51 @@ def resolve():
     return {'version': version, 'ref': ref, 'commit': commit}
 
 
+def kernel_source(platform, version):
+    target, subtarget, _ = TARGETS[platform]
+    url = f'https://downloads.immortalwrt.org/releases/{version}/targets/{target}/{subtarget}/profiles.json'
+    with urllib.request.urlopen(url, timeout=60) as response:
+        metadata = json.load(response)
+    kernel = metadata['linux_kernel']
+    return {'version': str(kernel['version']), 'release': str(kernel['release']),
+            'fingerprint': str(kernel['version']) + '-r' + str(kernel['release'])}
+
+
+def build_plan(platform, profile, scheduled, baseline, kernels):
+    combinations = [('x86', 'full'), ('x86', 'lite'), ('rockchip', 'full'),
+                    ('rockchip', 'lite'), ('filogic', 'lite')]
+    candidates = [(p, v) for p, v in combinations
+                  if platform in ('all', p) and profile in ('both', v)]
+    if not candidates:
+        raise ValueError('No supported combination. Filogic supports lite only.')
+    jobs, skipped = [], []
+    for p, v in candidates:
+        key = p + '/' + v
+        if scheduled and baseline.get(key, {}).get('fingerprint') == kernels[p]['fingerprint']:
+            skipped.append(key)
+        else:
+            jobs.append({'platform': p, 'profile': v, 'kernel': kernels[p]})
+    return jobs, skipped
+
+
+def fix_rust_host(source):
+    """Stable Rust CI LLVM artifacts expire; build LLVM from the pinned source."""
+    makefile = source / 'feeds/packages/lang/rust/Makefile'
+    if not makefile.exists():
+        return
+    text = makefile.read_text()
+    old = '--set=llvm.download-ci-llvm=true'
+    if old in text:
+        text = text.replace(old, '--set=llvm.download-ci-llvm=false')
+        marker = '$(eval $(call HostBuild))'
+        text = text.replace(marker, 'HOST_CONFIGURE_ARGS += --set=build.jobs=2 --set=llvm.link-jobs=1\n\n' + marker)
+        makefile.write_text(text)
+        print('Rust host: build pinned LLVM locally; CI LLVM download disabled, jobs=2/link-jobs=1')
+    result = subprocess.run(['git', '-C', str(source / 'feeds/packages'), 'diff', '--', 'lang/rust/Makefile'],
+                            capture_output=True, text=True, check=True)
+    (source / 'source-patches.diff').write_text(result.stdout)
+
+
 def config(platform, profile):
     target, subtarget, devices = TARGETS[platform]
     if platform == 'filogic' and profile == 'full':
@@ -94,7 +139,7 @@ def collect(platform, source, output):
     for path in directory.iterdir():
         if path.is_file():
             shutil.copy2(path, output / path.name)
-    for name in ('.config', 'requested.config', 'source-version.txt', 'feeds-version.txt', 'source.json'):
+    for name in ('.config', 'requested.config', 'source-version.txt', 'feeds-version.txt', 'source.json', 'kernel-source.json', 'source-patches.diff'):
         shutil.copy2(source / name, output / name)
     (output / 'kernel-version.json').write_text(json.dumps(metadata['linux_kernel'], indent=2) + '\n')
     (output / 'devices.json').write_text(json.dumps(devices, indent=2) + '\n')
@@ -109,6 +154,7 @@ def bundle(input_dir, output):
     """Package successful Actions artifacts as separate public device downloads."""
     output.mkdir(parents=True, exist_ok=True)
     count = 0
+    state = json.loads(__import__('os').environ.get('KERNEL_BASELINE_JSON', '{}'))
     for directory in sorted(input_dir.iterdir()):
         if not directory.is_dir() or not (directory / 'profiles.json').is_file():
             continue
@@ -120,6 +166,7 @@ def bundle(input_dir, output):
             raise RuntimeError('Invalid artifact profile: ' + directory.name)
         platform = next(key for key, value in TARGETS.items()
                         if '/'.join(value[:2]) == metadata['target'])
+        state[platform + '/' + suffix] = json.loads((directory / 'kernel-source.json').read_text())
         for device in devices:
             images = metadata['profiles'][device]['images']
             if platform == 'x86':
@@ -136,7 +183,7 @@ def bundle(input_dir, output):
                     archive.write(path, path.name)
                     checksums.append(digest + '  ' + path.name)
                 for filename in ('.config', 'requested.config', 'source.json', 'source-version.txt',
-                                 'feeds-version.txt', 'kernel-version.json'):
+                                 'feeds-version.txt', 'kernel-version.json', 'kernel-source.json', 'source-patches.diff'):
                     archive.write(directory / filename, filename)
                 archive.writestr('images.json', json.dumps(images, ensure_ascii=False, indent=2))
                 archive.writestr('xzt8wrt-sha256sums', '\n'.join(checksums) + '\n')
@@ -148,6 +195,7 @@ def bundle(input_dir, output):
                     "Build success is not a hardware test. Back up your device first.\n")
             count += 1
     if count:
+        (output / 'kernel-state.json').write_text(json.dumps(state, indent=2) + '\n')
         sums = [hashlib.sha256(path.read_bytes()).hexdigest() + '  ' + path.name
                 for path in sorted(output.glob('*.zip'))]
         (output / 'SHA256SUMS').write_text('\n'.join(sums) + '\n')
@@ -157,15 +205,20 @@ def bundle(input_dir, output):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('command', choices=['resolve', 'config', 'collect', 'bundle'])
+    parser.add_argument('command', choices=['resolve', 'config', 'collect', 'bundle', 'kernel', 'fix-rust'])
     parser.add_argument('--platform', choices=TARGETS, default='x86')
     parser.add_argument('--profile', choices=['full', 'lite'], default='full')
+    parser.add_argument('--version')
     parser.add_argument('--source', type=pathlib.Path)
     parser.add_argument('--input', type=pathlib.Path)
     parser.add_argument('--output', type=pathlib.Path)
     args = parser.parse_args()
     if args.command == 'resolve':
         print(json.dumps(resolve()))
+    elif args.command == 'kernel':
+        print(json.dumps(kernel_source(args.platform, args.version)))
+    elif args.command == 'fix-rust':
+        fix_rust_host(args.source)
     elif args.command == 'config':
         print(config(args.platform, args.profile), end='')
     elif args.command == 'collect':

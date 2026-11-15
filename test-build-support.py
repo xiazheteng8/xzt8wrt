@@ -32,6 +32,35 @@ class BuildSupportTests(unittest.TestCase):
                 keys = [line.split('=')[0] for line in config.splitlines() if line.startswith('CONFIG_')]
                 self.assertEqual(len(keys), len(set(keys)))
 
+    def test_kernel_schedule_skips_unchanged_and_retries_missing(self):
+        kernels = {p: {'fingerprint': '6.12.103-r1'} for p in support.TARGETS}
+        baseline = {p + '/' + v: {'fingerprint': '6.12.103-r1'} for p, v in
+                    [('x86','full'), ('x86','lite'), ('rockchip','full'), ('rockchip','lite'), ('filogic','lite')]}
+        jobs, skipped = support.build_plan('all', 'both', True, baseline, kernels)
+        self.assertEqual(jobs, [])
+        self.assertEqual(len(skipped), 5)
+        kernels['rockchip'] = {'fingerprint': '6.12.104-r1'}
+        jobs, _ = support.build_plan('all', 'both', True, baseline, kernels)
+        self.assertEqual([(j['platform'], j['profile']) for j in jobs], [('rockchip','full'), ('rockchip','lite')])
+        baseline.pop('x86/full')
+        jobs, _ = support.build_plan('x86', 'both', True, baseline, kernels)
+        self.assertEqual([j['profile'] for j in jobs], ['full'])
+        jobs, _ = support.build_plan('x86', 'both', False, baseline, kernels)
+        self.assertEqual(len(jobs), 2)
+
+    def test_rust_host_fix_preserves_protocol_packages(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = pathlib.Path(temporary)
+            package = root / 'feeds/packages'
+            (package / 'lang/rust').mkdir(parents=True)
+            subprocess = __import__('subprocess')
+            subprocess.run(['git', 'init', str(package)], check=True, capture_output=True)
+            makefile = package / 'lang/rust/Makefile'
+            makefile.write_text('HOST_CONFIGURE_ARGS = --set=llvm.download-ci-llvm=true\n$(eval $(call HostBuild))\n')
+            support.fix_rust_host(root)
+            self.assertIn('llvm.download-ci-llvm=false', makefile.read_text())
+            self.assertIn('llvm.link-jobs=1', makefile.read_text())
+
     def test_latest_stable_numeric_order_and_peeled_tag(self):
         with patch.object(support.urllib.request, 'urlopen') as request, patch.object(support.subprocess, 'check_output') as git:
             request.return_value.__enter__.return_value.read.return_value = (
@@ -60,8 +89,8 @@ class BuildSupportTests(unittest.TestCase):
                     metadata['profiles'][device] = {'images': images}
                 manifest = directory / 'profiles.json'
                 manifest.write_text(json.dumps(metadata))
-                for name in ('.config', 'requested.config', 'source-version.txt', 'feeds-version.txt', 'source.json'):
-                    (source / name).write_text(json.dumps({'version': '1.0.0', 'ref': 'v1.0.0', 'commit': 'a'*40}) if name == 'source.json' else 'test')
+                for name in ('.config', 'requested.config', 'source-version.txt', 'feeds-version.txt', 'source.json', 'kernel-source.json', 'source-patches.diff'):
+                    (source / name).write_text(json.dumps({'version': '1.0.0', 'ref': 'v1.0.0', 'commit': 'a'*40}) if name == 'source.json' else json.dumps({'fingerprint': '6.12.103-r1'}) if name == 'kernel-source.json' else 'test')
                 artifact = root / ('xzt8wrt-test-' + platform + '-lite')
                 support.collect(platform, source, artifact)
                 self.assertTrue((artifact / 'kernel-version.json').is_file())

@@ -20,9 +20,15 @@ cd "$SOURCE"
 [[ "$(git rev-parse HEAD)" == "$COMMIT" ]] || { echo "Source mismatch: use a fresh SOURCE_DIR for $REF" >&2; exit 1; }
 ./scripts/feeds update -a
 ./scripts/feeds install -a
+python3 "$ROOT/build-support.py" fix-rust --source "$SOURCE"
 cp "$ROOT/requested.config" .config
 cp .config requested.config
 cp "$ROOT/source.json" source.json
+if [[ -n "${SOURCE_KERNEL:-}" ]]; then
+  printf '%s\n' "$SOURCE_KERNEL" > kernel-source.json
+else
+  python3 "$ROOT/build-support.py" kernel --platform "$PLATFORM" --version "$VERSION" > kernel-source.json
+fi
 make defconfig
 python3 "$ROOT/check-config.py" requested.config .config
 mkdir -p files/etc/uci-defaults
