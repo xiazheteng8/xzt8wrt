@@ -107,6 +107,7 @@ jobs:
           gh release upload "$TAG" release-output/*.zip release-output/SHA256SUMS --clobber
           gh release upload "$TAG" release-output/kernel-state.json --clobber
           echo "Published: https://github.com/$GH_REPO/releases/tag/$TAG" >> "$GITHUB_STEP_SUMMARY"
+          python3 release-support.py index || echo "索引更新失败，可直接在 Releases 下载"
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:

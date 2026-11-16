@@ -55,6 +55,8 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           python3 test-build-support.py
+          node test-setup-wizard.js
+          python3 test-firmware-overlay.py
           mkdir -p baseline
           python3 release-support.py baseline > baseline/kernel-state.json
           python3 build-support.py resolve --version "$SELECT_VERSION" > source.json
