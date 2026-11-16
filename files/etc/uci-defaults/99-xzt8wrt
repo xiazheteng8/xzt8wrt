@@ -12,4 +12,8 @@ for service in aria2 samba4 ttyd miniupnpd openvpn smartdns adblock sqm pbr ddns
         "/etc/init.d/$service" disable
     fi
 done
+# Installed extensions are not all safe to run together before the network is configured.
+for service in passwall passwall2 shadowsocksr smartdns adguardhome adblock banip mwan3 pbr ksmbd softethervpn syncdial xlnetacc unblockneteasemusic; do
+    [ ! -x "/etc/init.d/$service" ] || "/etc/init.d/$service" disable
+done
 exit 0
