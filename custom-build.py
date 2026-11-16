@@ -42,6 +42,8 @@ def plan(uid, raw, version="latest"):
                      'fast_available': bool(builders) and not external,
                      'publish': plugins.release_allowed(uid),
                      'source_platform': 'x86' if selected['platform'] == 'x86' else 'custom'})
+    if selected['platform'] == 'x86':
+        selected['packages'] = sorted(set(selected['packages'] + ['parted', 'blkid', 'resize2fs', 'e2fsprogs']))
     return selected
 
 
@@ -59,7 +61,9 @@ def fast(data):
     overlay = ROOT / 'custom-files'
     shutil.copytree(ROOT / 'files', overlay, dirs_exist_ok=True)
     plugins.custom_defaults(overlay)
-    (overlay / 'etc/banner').write_text('\n  xzt8wrt / official ImageBuilder / custom\n')
+    import importlib
+    branding = importlib.import_module('firmware-overlay')
+    branding.install(overlay, data['source']['version'], data['platform'], '自选插件')
     (overlay / 'etc/xzt8wrt-profile').write_text('lite\n')
     args = ['make', 'image', 'PROFILE=' + data['id'], 'PACKAGES=' + ' '.join(data['packages'] + ['-dnsmasq']),
             'FILES=' + str(overlay), 'EXTRA_IMAGE_NAME=xzt8wrt-' + data['signature']]

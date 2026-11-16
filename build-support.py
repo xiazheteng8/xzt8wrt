@@ -137,7 +137,8 @@ def config(platform, profile, device=''):
                   'CONFIG_GRUB_EFI_IMAGES=y']
         lines += [f'CONFIG_PACKAGE_{p}=y' for p in (
             'kmod-igc', 'kmod-igb', 'kmod-e1000e', 'kmod-r8169',
-            'kmod-usb-net-rtl8152', 'kmod-usb-net-asix-ax88179', 'kmod-vmxnet3')]
+            'kmod-usb-net-rtl8152', 'kmod-usb-net-asix-ax88179', 'kmod-vmxnet3',
+            'parted', 'blkid', 'resize2fs', 'e2fsprogs')]
     else:
         lines += ['CONFIG_TARGET_MULTI_PROFILE=y', 'CONFIG_TARGET_PER_DEVICE_ROOTFS=y',
                   '# CONFIG_TARGET_ALL_PROFILES is not set']
@@ -151,11 +152,20 @@ def config(platform, profile, device=''):
         lines += ['# CONFIG_TARGET_ROOTFS_EXT4FS is not set', 'CONFIG_TARGET_ROOTFS_INITRAMFS=y']
     lines += (ROOT / 'seed.config').read_text().splitlines()
     lines += (ROOT / 'profiles' / (profile + '.config')).read_text().splitlines()
+    if platform == 'x86' and profile == 'full' and os.environ.get('CUSTOM_MODE') != '1':
+        for entry in plugin_support.options().values():
+            if entry['supported']:
+                lines += ['CONFIG_PACKAGE_' + package + '=y' for package in entry['packages']]
+        lines += ['CONFIG_PACKAGE_luci-app-passwall2_Basic_Core_Xray=y', 'CONFIG_PACKAGE_luci-app-ssr-plus_INCLUDE_Xray=y']
     if os.environ.get('CUSTOM_MODE') == '1':
         if profile != 'lite':
             raise ValueError('Custom selections must use the lite base')
         lines = plugin_support.source_config(lines, os.environ.get('CUSTOM_PLUGINS', ''))
-    return '\n'.join(lines) + '\n'
+    unique = {}
+    for line in lines:
+        key = line.split('=', 1)[0] if line.startswith('CONFIG_') else line.split()[1] if line.startswith('# CONFIG_') else line
+        unique[key] = line
+    return '\n'.join(unique.values()) + '\n'
 
 
 def collect(platform, source, output, device=''):
@@ -195,7 +205,7 @@ def collect(platform, source, output, device=''):
             shutil.copy2(path, output / path.name)
     for name in ('.config', 'requested.config', 'source-version.txt', 'feeds-version.txt', 'source.json', 'kernel-source.json', 'source-patches.diff'):
         shutil.copy2(source / name, output / name)
-    for name in ('arm-adaptation.json', 'arm-adaptation.diff', 'custom-build.json'):
+    for name in ('arm-adaptation.json', 'arm-adaptation.diff', 'custom-build.json', 'full-plugins.json'):
         if (source / name).is_file():
             shutil.copy2(source / name, output / name)
     (output / 'kernel-version.json').write_text(json.dumps(metadata['linux_kernel'], indent=2) + '\n')
@@ -248,7 +258,7 @@ def bundle(input_dir, output):
                 for filename in ('.config', 'requested.config', 'source.json', 'source-version.txt',
                                  'feeds-version.txt', 'kernel-version.json', 'kernel-source.json', 'source-patches.diff'):
                     archive.write(directory / filename, filename)
-                for filename in ('arm-adaptation.json', 'arm-adaptation.diff', 'legacy-build-metadata.json', 'custom-build.json'):
+                for filename in ('arm-adaptation.json', 'arm-adaptation.diff', 'legacy-build-metadata.json', 'custom-build.json', 'full-plugins.json'):
                     if (directory / filename).is_file():
                         archive.write(directory / filename, filename)
                 archive.writestr('images.json', json.dumps(images, ensure_ascii=False, indent=2))

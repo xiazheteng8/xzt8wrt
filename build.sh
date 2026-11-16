@@ -25,6 +25,8 @@ fi
 ./scripts/feeds install -a
 if [[ "${CUSTOM_MODE:-0}" == 1 ]]; then
   python3 "$ROOT/plugin_support.py" "$SOURCE"
+elif [[ "$PLATFORM" == x86 && "$PROFILE" == full ]]; then
+  FULL_PLUGIN_MODE=1 CUSTOM_PLUGINS=luci-app-passwall2,luci-app-ssr-plus CUSTOM_DEVICE=x86/64/generic python3 "$ROOT/plugin_support.py" "$SOURCE"
 fi
 python3 "$ROOT/build-support.py" fix-rust --source "$SOURCE"
 cp "$ROOT/requested.config" .config
@@ -43,7 +45,7 @@ chmod 0755 files/etc/uci-defaults/99-xzt8wrt
 if [[ "${CUSTOM_MODE:-0}" == 1 ]]; then
   python3 -c 'import sys,pathlib; sys.path.insert(0,sys.argv[1]); import plugin_support; plugin_support.custom_defaults(pathlib.Path("files"))' "$ROOT"
 fi
-printf '\n  xzt8wrt\n  ImmortalWrt %s / %s / %s\n\n' "$VERSION" "$PLATFORM" "$PROFILE" > files/etc/banner
+python3 "$ROOT/firmware-overlay.py" files --version "$VERSION" --platform "$PLATFORM" --profile "$PROFILE"
 printf '%s\n' "$PROFILE" > files/etc/xzt8wrt-profile
 git rev-parse HEAD > source-version.txt
 ./scripts/feeds list -s > feeds-version.txt

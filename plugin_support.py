@@ -61,6 +61,8 @@ def source_config(lines, raw):
 
 def install_source(source, raw, uid):
     names = selection(raw)
+    if os.environ.get('FULL_PLUGIN_MODE') == '1':
+        names = sorted(p['id'] for p in options().values() if p['supported'])
     records = []
     for name in names:
         ref = options()[name].get('source')
@@ -82,7 +84,8 @@ def install_source(source, raw, uid):
         records.append({'package': name, **ref})
     metadata = {'schema': 1, 'device': uid, 'plugins': names, 'packages': packages(names),
                 'signature': identity(uid, names), 'method': 'source', 'external_sources': records}
-    (source / 'custom-build.json').write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + '\n')
+    metadata_file = 'full-plugins.json' if os.environ.get('FULL_PLUGIN_MODE') == '1' else 'custom-build.json'
+    (source / metadata_file).write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + '\n')
 
 
 def custom_defaults(directory):
