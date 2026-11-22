@@ -1,8 +1,388 @@
 {
   "schema": 1,
   "repository": "xiazheteng8/xzt8wrt",
-  "updated_at": "2026-11-22T18:38:13.675919+00:00",
+  "updated_at": "2026-11-22T20:13:06.653213+00:00",
   "releases": [
+    {
+      "tag_name": "6.12.103-r1-20261123-041138-bb43",
+      "name": "xzt8wrt｜内核 6.12.103-r1｜20261123-041138",
+      "published_at": "2026-11-22T20:11:39Z",
+      "html_url": "https://github.com/xiazheteng8/xzt8wrt/releases/tag/6.12.103-r1-20261123-041138-bb43",
+      "assets": [
+        {
+          "name": "kernel-state.json",
+          "size": 874,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/kernel-state.json",
+          "digest": "sha256:d90c443b9c62a70cdfaf08e12af34b3fea0feb51b2fc5f3102e4fb2424d7b9f8"
+        },
+        {
+          "name": "SHA256SUMS",
+          "size": 7231,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/SHA256SUMS",
+          "digest": "sha256:3009a971b4f72235e2ccb30404f5dc3d31b1abf184775d278f8c9fddbce7b864"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-filogic-asus_tuf-ax6000-lite.zip",
+          "size": 51091165,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-filogic-asus_tuf-ax6000-lite.zip",
+          "digest": "sha256:2ceb822f1cfb422420bf79fa39244dd4d50a10dae9ec85f33888cfa135c776f0"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-filogic-cudy_tr3000-256mb-v1-lite.zip",
+          "size": 50443655,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-filogic-cudy_tr3000-256mb-v1-lite.zip",
+          "digest": "sha256:71b68965a54e7188dc41d12571668e4f131989058e753c5043aca32b2079825c"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-filogic-cudy_tr3000-v1-lite.zip",
+          "size": 50443552,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-filogic-cudy_tr3000-v1-lite.zip",
+          "digest": "sha256:b09ebb43c0f3dcb525162270c9a903cfff918399a7fe7d87fe611114837d095f"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-filogic-cudy_tr3000-v1-ubootmod-lite.zip",
+          "size": 53163456,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-filogic-cudy_tr3000-v1-ubootmod-lite.zip",
+          "digest": "sha256:dd2f01fa7a05ad30b77fb891edc3633a451069d33e6924c17795667945280c96"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-filogic-glinet_gl-mt3000-lite.zip",
+          "size": 50446698,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-filogic-glinet_gl-mt3000-lite.zip",
+          "digest": "sha256:70759d3bc1b395ea6a91f4858e2b58bc5268f13e6e9432a7011d9a69746aa3e1"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-filogic-glinet_gl-mt6000-lite.zip",
+          "size": 108625380,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-filogic-glinet_gl-mt6000-lite.zip",
+          "digest": "sha256:154320d50ffd716d30df13db4113a597622ac78aed6f65d31b36ba382faa5975"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-filogic-xiaomi_redmi-router-ax6000-stock-lite.zip",
+          "size": 73887963,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-filogic-xiaomi_redmi-router-ax6000-stock-lite.zip",
+          "digest": "sha256:12364ec722fd5fb9d8e8e1fd1d045c4f330b4497d9d6c7d508af7d4c6f00bbf9"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-filogic-xiaomi_redmi-router-ax6000-ubootmod-lite.zip",
+          "size": 76723910,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-filogic-xiaomi_redmi-router-ax6000-ubootmod-lite.zip",
+          "digest": "sha256:ca34406aca6acb26d00e632f8945ab297e8c594333235a4d4f6528740e03f2e0"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-rockchip-friendlyarm_nanopi-r2s-full.zip",
+          "size": 514940971,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-rockchip-friendlyarm_nanopi-r2s-full.zip",
+          "digest": "sha256:b498bf1ba0eae622a05aecc3c79a62590f50e98c0b45a4e89b59f8ea2441c59f"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-rockchip-friendlyarm_nanopi-r2s-lite.zip",
+          "size": 61712093,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-rockchip-friendlyarm_nanopi-r2s-lite.zip",
+          "digest": "sha256:e382f5029f4abdfa3265a98a195c96e00ae58be47530dcabf7deb29f9b1d98ba"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-rockchip-friendlyarm_nanopi-r4s-full.zip",
+          "size": 515202526,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-rockchip-friendlyarm_nanopi-r4s-full.zip",
+          "digest": "sha256:149eb35660a045edf59740f1559a4d98b884c551c4c3c7929116a24af60dc49c"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-rockchip-friendlyarm_nanopi-r4s-lite.zip",
+          "size": 61955527,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-rockchip-friendlyarm_nanopi-r4s-lite.zip",
+          "digest": "sha256:f8b61da4bc69cafbbcd35494c1854d1d1cbaa1cc342cd37da45e964b6167e4d9"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-rockchip-friendlyarm_nanopi-r5s-full.zip",
+          "size": 512801752,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-rockchip-friendlyarm_nanopi-r5s-full.zip",
+          "digest": "sha256:be1557b2a38e1ffea3e4c30eb6126e052c489729f18c8006fbf07d987beb422b"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-rockchip-friendlyarm_nanopi-r5s-lite.zip",
+          "size": 59557109,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-rockchip-friendlyarm_nanopi-r5s-lite.zip",
+          "digest": "sha256:7855c0a88304396e41b852015cefbe20109ca1ebb3afacdc9008f5cd4125ac0e"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-rockchip-friendlyarm_nanopi-r6s-full.zip",
+          "size": 512795662,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-rockchip-friendlyarm_nanopi-r6s-full.zip",
+          "digest": "sha256:f8c88bf4e456421b7cbe351df48a1b45410d68c2241d26a2b1b242e51f92cdb7"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-rockchip-friendlyarm_nanopi-r6s-lite.zip",
+          "size": 59549463,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-rockchip-friendlyarm_nanopi-r6s-lite.zip",
+          "digest": "sha256:30731b7fbe124bfeb83591dabc4bd01621f06478f8b3098815b01ebf58551e0a"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-rockchip-lunzn_fastrhino-r66s-full.zip",
+          "size": 512672223,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-rockchip-lunzn_fastrhino-r66s-full.zip",
+          "digest": "sha256:2a30b6835d7b5621b85a6da8d679c6bf6fe315bf633cd8d480488053609def1e"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-rockchip-lunzn_fastrhino-r66s-lite.zip",
+          "size": 59427209,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-rockchip-lunzn_fastrhino-r66s-lite.zip",
+          "digest": "sha256:4290c5c7d267df77349f7303e39a966167bcf2975f112cabcb8dd5d786a9446a"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-rockchip-lunzn_fastrhino-r68s-full.zip",
+          "size": 512823753,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-rockchip-lunzn_fastrhino-r68s-full.zip",
+          "digest": "sha256:6515f6aa6177643a0f15e252da50f1a1533de81d4b767bdfa144bc852a9d8733"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-rockchip-lunzn_fastrhino-r68s-lite.zip",
+          "size": 59577888,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-rockchip-lunzn_fastrhino-r68s-lite.zip",
+          "digest": "sha256:4cf6b60b691e12173bd2be76ce0583f0c8653d70e0e9504797e64b931bd669a0"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-full-img-bios-ext4.zip",
+          "size": 312307278,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-full-img-bios-ext4.zip",
+          "digest": "sha256:a9cac23fd06656846e7beb70804f78f5ca930b566632900439a68dc448144278"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-full-img-bios-squashfs.zip",
+          "size": 249367313,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-full-img-bios-squashfs.zip",
+          "digest": "sha256:3382c7c10288ef040a58953a1da52386251098dbf1b6f997ec69594f53aedab2"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-full-img-uefi-ext4.zip",
+          "size": 312514773,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-full-img-uefi-ext4.zip",
+          "digest": "sha256:191ff3f77792365a40b35de79d6fafe00160b92511e0a0ef3594196078b949dc"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-full-img-uefi-squashfs.zip",
+          "size": 249567896,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-full-img-uefi-squashfs.zip",
+          "digest": "sha256:615d53f06289b65faa37e9254351fdcd81e9f42aac8abe19f801afc42437dbe2"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-full-qcow2-bios-ext4.zip",
+          "size": 315545034,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-full-qcow2-bios-ext4.zip",
+          "digest": "sha256:f98353adf15bd0fbf4b727b552a65039e4038d69b1358e27221b4e32c9e405ab"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-full-qcow2-bios-squashfs.zip",
+          "size": 249330138,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-full-qcow2-bios-squashfs.zip",
+          "digest": "sha256:3da5b011e3f93d4056d5f55d8cfcff851ee9117cb7f88b8f239fd9aba8849c70"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-full-qcow2-uefi-ext4.zip",
+          "size": 315750257,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-full-qcow2-uefi-ext4.zip",
+          "digest": "sha256:98966d078bf3a69b8ad333d7ce6d2cc04f7fa766ca8d409e3bb1c9d465839c9f"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-full-qcow2-uefi-squashfs.zip",
+          "size": 249537411,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-full-qcow2-uefi-squashfs.zip",
+          "digest": "sha256:13db5feb4e5c22d25ce0ab1862d18d879cb80bd79527a187b3d59ea85bf77669"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-full-vdi-bios-ext4.zip",
+          "size": 315556715,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-full-vdi-bios-ext4.zip",
+          "digest": "sha256:d429f5051d1153352d46b4fae0c9e684b73a362fd59f89deaac5b022d387b15e"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-full-vdi-bios-squashfs.zip",
+          "size": 249326524,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-full-vdi-bios-squashfs.zip",
+          "digest": "sha256:9d4dd12a3637c5b6d74c4f8f742580fbbbe7c6b72dcc65005452dbf5ba1d8c08"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-full-vdi-uefi-ext4.zip",
+          "size": 315740069,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-full-vdi-uefi-ext4.zip",
+          "digest": "sha256:e5b8752989b9bc2440a6c207d6b8bbaeab8ef4c7f09e3cbd5f94c0dab8cbc9aa"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-full-vdi-uefi-squashfs.zip",
+          "size": 249528864,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-full-vdi-uefi-squashfs.zip",
+          "digest": "sha256:fe4008863824a354e28320bba5fa479899859bfbeb61d4195b452b8cdfe3fc07"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-full-vhdx-bios-ext4.zip",
+          "size": 315711930,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-full-vhdx-bios-ext4.zip",
+          "digest": "sha256:2fb3d398885b8da6371014b8971654232789f42a27ea071ebaa107d4797f3cf5"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-full-vhdx-bios-squashfs.zip",
+          "size": 249351556,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-full-vhdx-bios-squashfs.zip",
+          "digest": "sha256:1f1fc914de7d0958ad161bd97b7ad1c0163cef4bb440988f6531461b36ac932a"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-full-vhdx-uefi-ext4.zip",
+          "size": 315926012,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-full-vhdx-uefi-ext4.zip",
+          "digest": "sha256:df5d118ecdfa07cd98d8c52c75d74b49a0c63d61e4a9a2151a35060da9a751c0"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-full-vhdx-uefi-squashfs.zip",
+          "size": 249555885,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-full-vhdx-uefi-squashfs.zip",
+          "digest": "sha256:6906b8e55de2f5ddedcba23f4b694832a9a57efda838a78389a3d56a9d8a171b"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-full-vmdk-bios-ext4.zip",
+          "size": 321787979,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-full-vmdk-bios-ext4.zip",
+          "digest": "sha256:a9e2a3358105cf7b31a262aaf9fac44f4778ceeef7eec261e99fa3e44f77b8b0"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-full-vmdk-bios-squashfs.zip",
+          "size": 249628957,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-full-vmdk-bios-squashfs.zip",
+          "digest": "sha256:0183f767471d7e580fc708f5dfa234b1b6655bde30a03e2a0a172ce3085c515a"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-full-vmdk-uefi-ext4.zip",
+          "size": 321998237,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-full-vmdk-uefi-ext4.zip",
+          "digest": "sha256:1eb9e16189f218141e3ba7c9195ad8097fd87c709a5ed4869e37aa6a69baaa76"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-full-vmdk-uefi-squashfs.zip",
+          "size": 249836492,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-full-vmdk-uefi-squashfs.zip",
+          "digest": "sha256:c05cc59d63272faa9874ebdb5534ae78158b435c4927a558e8201365248fbfe9"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-lite-img-bios-ext4.zip",
+          "size": 38547557,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-lite-img-bios-ext4.zip",
+          "digest": "sha256:b42ea03e56db7da71b5bb44dafabe9d34bf18a1f5a2c86ffb51990cbd2e54bc5"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-lite-img-bios-squashfs.zip",
+          "size": 32164198,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-lite-img-bios-squashfs.zip",
+          "digest": "sha256:0d3605146914cdfe313f5c4469718679209217954ba2ebcb0436fc79bd3ab977"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-lite-img-uefi-ext4.zip",
+          "size": 38753270,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-lite-img-uefi-ext4.zip",
+          "digest": "sha256:e5d0843d3cd171d9bdf622f19aa4f94110301fc6f0f48d8b5072941fa24c4529"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-lite-img-uefi-squashfs.zip",
+          "size": 32366923,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-lite-img-uefi-squashfs.zip",
+          "digest": "sha256:9e11c5c05ff770d91f014fd7d2a535a63b50facf16beffdc978bf9ea46f96f01"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-lite-qcow2-bios-ext4.zip",
+          "size": 38825180,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-lite-qcow2-bios-ext4.zip",
+          "digest": "sha256:d62a351e485ec0e7ce3e2eb15e068b8cdd9d8ff3b0aa26de7cdf92575e8749ca"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-lite-qcow2-bios-squashfs.zip",
+          "size": 32157944,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-lite-qcow2-bios-squashfs.zip",
+          "digest": "sha256:ac1b2136dd71a687044de356b956573f1f23f752a50192597d73a5d5f4303f24"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-lite-qcow2-uefi-ext4.zip",
+          "size": 39030157,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-lite-qcow2-uefi-ext4.zip",
+          "digest": "sha256:04df2d08debb0b73b8295a79a8ca0ac7594a4c0c84ce1fd65770426739c8ecaf"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-lite-qcow2-uefi-squashfs.zip",
+          "size": 32364315,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-lite-qcow2-uefi-squashfs.zip",
+          "digest": "sha256:5014ab81470611f546c37f200d235d40b5e72e6a984e7c3b8cf675c138b406ef"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-lite-vdi-bios-ext4.zip",
+          "size": 38827776,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-lite-vdi-bios-ext4.zip",
+          "digest": "sha256:2b159d959d649bbb429f0b0c9387cf385bf152978484eeffac1d9c1ec022c939"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-lite-vdi-bios-squashfs.zip",
+          "size": 32162017,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-lite-vdi-bios-squashfs.zip",
+          "digest": "sha256:c6b2cd7ba38def1c39f7ef0c768047e659db537b7e034975c0820b59885438c2"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-lite-vdi-uefi-ext4.zip",
+          "size": 39034918,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-lite-vdi-uefi-ext4.zip",
+          "digest": "sha256:9874df7f9a8dc5c9ae8c03eee95b13166b9832e8802c6cf908512bda4c5b5fe5"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-lite-vdi-uefi-squashfs.zip",
+          "size": 32363252,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-lite-vdi-uefi-squashfs.zip",
+          "digest": "sha256:5828e1f1a79bbfc6f7c81a819462fb740f7e15df8b2b4025b681588bc5720a82"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-lite-vhdx-bios-ext4.zip",
+          "size": 38867229,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-lite-vhdx-bios-ext4.zip",
+          "digest": "sha256:faf8ff08b859b26144fba080012ca9d5e7a17c80d01537e402b9d5a3efbee575"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-lite-vhdx-bios-squashfs.zip",
+          "size": 32177407,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-lite-vhdx-bios-squashfs.zip",
+          "digest": "sha256:1f99fce12319162c1b28405087ef226ef1b48c883de5de582249bad4993eb963"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-lite-vhdx-uefi-ext4.zip",
+          "size": 39078525,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-lite-vhdx-uefi-ext4.zip",
+          "digest": "sha256:9660c496d3a974cefa58289c7258a894f8641b93cd832fe95fd214ee9d94e39d"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-lite-vhdx-uefi-squashfs.zip",
+          "size": 32381486,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-lite-vhdx-uefi-squashfs.zip",
+          "digest": "sha256:aa96de00264f67879032e9bba1efc34f288634d2d263a2d6386e0d6704dd7d7f"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-lite-vmdk-bios-ext4.zip",
+          "size": 39440643,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-lite-vmdk-bios-ext4.zip",
+          "digest": "sha256:3552096361870852d0525a4a9659a278dff50e560b4d167b2c01131abba22f86"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-lite-vmdk-bios-squashfs.zip",
+          "size": 32195084,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-lite-vmdk-bios-squashfs.zip",
+          "digest": "sha256:55b2f22ad5da2f41c350239ec77ae2ed89e164a49c72e302c9e6e334fb0ae6e7"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-lite-vmdk-uefi-ext4.zip",
+          "size": 39650475,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-lite-vmdk-uefi-ext4.zip",
+          "digest": "sha256:7e6669f666df776337f8b8905d7c19bb94e13a17e6170e3e790e08ab30aed0a9"
+        },
+        {
+          "name": "xzt8wrt-25.12.2-x86-generic-lite-vmdk-uefi-squashfs.zip",
+          "size": 32404851,
+          "browser_download_url": "https://github.com/xiazheteng8/xzt8wrt/releases/download/6.12.103-r1-20261123-041138-bb43/xzt8wrt-25.12.2-x86-generic-lite-vmdk-uefi-squashfs.zip",
+          "digest": "sha256:daac73c84d8a5e712baeeb4b40ed31664f36689a55d435c498c6e46ac22ccc51"
+        }
+      ]
+    },
     {
       "tag_name": "6.12.103-r1-20261123-023607-dc2a",
       "name": "xzt8wrt｜内核 6.12.103-r1｜20261123-023607",
