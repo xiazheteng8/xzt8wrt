@@ -9,6 +9,7 @@ import re
 import subprocess
 import tempfile
 import uuid
+import release_features
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent
@@ -96,6 +97,7 @@ def publish(directory):
               '', '固件工坊：https://xiazheteng8.github.io/xzt8wrt/',
               '其他机型仅提供自建教程，不纳入本站固定发布名单。',
               'Release 标签对应发布快照；原始源码、构建配置和内核信息保留在 ZIP 内。']
+    lines += ['', *release_features.render_features(state)]
     notes = directory / '发行说明.md'
     notes.write_text('\n'.join(lines) + '\n')
     subprocess.run(['gh', 'release', 'create', tag, '--repo', REPO, '--target', 'main',

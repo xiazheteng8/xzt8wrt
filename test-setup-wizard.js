@@ -1,6 +1,6 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const scope={view:{extend:x=>x},uci:{},ui:{},network:{}};
-vm.runInNewContext('(function(){'+fs.readFileSync('setup-wizard.js','utf8').replace('return view.extend({','globalThis.planSetup=planSetup; return view.extend({')+'})()',scope);
+vm.runInNewContext('(function(){'+fs.readFileSync('setup-wizard.js','utf8').replace('return view.extend({','globalThis.planSetup=planSetup; globalThis.planFirewall=planFirewall; globalThis.planDNS=planDNS; return view.extend({')+'})()',scope);
 const plan=scope.planSetup;
 const base={mode:'bypass',ip:'192.168.11.2',prefix:'24',gateway:'192.168.11.1',dns:'',wan:'eth1',username:'u',password:'p'};
 const one={lan:{device:'br-lan'},bridge:{'.name':'br','ports':['eth0']}};
@@ -20,3 +20,24 @@ assert(dhcp.some(x=>x[2]==='wan'&&x[3]==='proto'&&x[4]==='dhcp'));
 const pp=plan({...base,mode:'pppoe'},two,['eth0','eth1']);
 assert(pp.some(x=>x[2]==='wan'&&x[3]==='username'&&x[4]==='u'));
 console.log('Setup wizard: single-LAN routing, DHCP isolation, subnet/IP checks, WAN separation and PPPoE validation passed');
+
+const legacy={...one,wan:{device:'br-lan'},wan6:{device:'@wan'}};
+const bp=plan(base,legacy,['eth0']);
+for(const section of ['wan','wan6']){
+ assert(bp.some(o=>o[0]==='unset'&&o[2]===section&&o[3]==='device'));
+ assert(bp.some(o=>o[0]==='set'&&o[2]===section&&o[3]==='auto'&&o[4]==='0'));
+}
+const snapshot={...legacy,zones:[{'.name':'zone_lan',name:'lan',network:[]},{'.name':'zone_wan',name:'wan',network:['wan','lan'],device:['br-lan','eth0','eth9']}],dnsmasq:{'.name':'dns'},smartdns:{'.name':'smart'},smartServers:[]};
+const fw=scope.planFirewall({...base,nat:true},snapshot);
+assert(fw.some(o=>o[2]==='zone_lan'&&o[3]==='masq'&&o[4]==='1'));
+assert(fw.some(o=>o[2]==='zone_wan'&&o[3]==='device'&&o[4].join()==='eth9'));
+assert(fw.some(o=>o[2]==='zone_wan'&&o[3]==='network'&&o[4].join()==='wan'));
+const dns=scope.planDNS({...base,smartdns:true},snapshot);
+assert(dns.some(o=>o[1]==='smartdns'&&o[3]==='port'&&o[4]==='6053'));
+assert(dns.some(o=>o[1]==='dhcp'&&o[3]==='server'&&o[4].join()==='127.0.0.1#6053,223.5.5.5,119.29.29.29'));
+assert(dns.some(o=>o[1]==='dhcp'&&o[3]==='addnhosts'&&o[4].includes('/tmp/xzt8wrt.hosts')));
+assert(!dns.some(o=>o[3]==='rebind_protection'));
+assert.throws(()=>scope.planDNS({...base,smartdns:true,dns:base.ip},snapshot),/不能指向/);
+const off=scope.planDNS({...base,smartdns:false,dns:'9.9.9.9'},snapshot);
+assert(off.some(o=>o[1]==='dhcp'&&o[3]==='server'&&o[4].join()==='9.9.9.9'));
+console.log('Legacy same-port WAN unbinding, exclusive LAN firewall, SmartDNS fallback and local hostname tests passed');

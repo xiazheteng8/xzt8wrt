@@ -8,7 +8,7 @@ import subprocess
 
 ROOT = pathlib.Path(__file__).resolve().parent
 BASE = ['luci', 'luci-ssl', 'luci-i18n-base-zh-cn', 'luci-app-firewall',
-        'luci-app-package-manager', 'luci-app-wol', 'luci-app-ddns-go', 'curl', 'ca-bundle', 'dnsmasq-full']
+        'luci-app-package-manager', 'luci-app-wol', 'luci-app-ddns-go', 'curl', 'ca-bundle', 'dnsmasq-full', 'smartdns', 'luci-app-smartdns']
 
 
 def options():

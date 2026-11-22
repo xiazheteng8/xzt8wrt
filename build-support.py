@@ -205,9 +205,11 @@ def collect(platform, source, output, device=''):
             shutil.copy2(path, output / path.name)
     for name in ('.config', 'requested.config', 'source-version.txt', 'feeds-version.txt', 'source.json', 'kernel-source.json', 'source-patches.diff'):
         shutil.copy2(source / name, output / name)
-    for name in ('arm-adaptation.json', 'arm-adaptation.diff', 'custom-build.json', 'full-plugins.json'):
+    for name in ('arm-adaptation.json', 'arm-adaptation.diff', 'custom-build.json', 'full-plugins.json', 'xzt8wrt-build.json'):
         if (source / name).is_file():
             shutil.copy2(source / name, output / name)
+    if (source / 'files/etc/xzt8wrt-build.json').is_file():
+        shutil.copy2(source / 'files/etc/xzt8wrt-build.json', output / 'xzt8wrt-build.json')
     (output / 'kernel-version.json').write_text(json.dumps(metadata['linux_kernel'], indent=2) + '\n')
     (output / 'devices.json').write_text(json.dumps(devices, indent=2) + '\n')
     if selected:
@@ -239,6 +241,8 @@ def bundle(input_dir, output):
         custom = json.loads((directory / 'custom-build.json').read_text()) if (directory / 'custom-build.json').is_file() else None
         state_key = 'custom/' + custom['signature'] if custom else selection['uid'] if selection else platform
         state[state_key + '/' + suffix] = json.loads((directory / 'kernel-source.json').read_text())
+        if (directory / 'xzt8wrt-build.json').is_file():
+            state[state_key + '/' + suffix]['xzt8wrt_features'] = json.loads((directory / 'xzt8wrt-build.json').read_text()).get('features', [])
         for device in devices:
             images = metadata['profiles'][device]['images']
             if platform == 'x86':
@@ -258,7 +262,7 @@ def bundle(input_dir, output):
                 for filename in ('.config', 'requested.config', 'source.json', 'source-version.txt',
                                  'feeds-version.txt', 'kernel-version.json', 'kernel-source.json', 'source-patches.diff'):
                     archive.write(directory / filename, filename)
-                for filename in ('arm-adaptation.json', 'arm-adaptation.diff', 'legacy-build-metadata.json', 'custom-build.json', 'full-plugins.json'):
+                for filename in ('arm-adaptation.json', 'arm-adaptation.diff', 'legacy-build-metadata.json', 'custom-build.json', 'full-plugins.json', 'xzt8wrt-build.json'):
                     if (directory / filename).is_file():
                         archive.write(directory / filename, filename)
                 archive.writestr('images.json', json.dumps(images, ensure_ascii=False, indent=2))

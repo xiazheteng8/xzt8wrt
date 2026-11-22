@@ -57,7 +57,7 @@ def convert(input_dir, output):
                     with zipfile.ZipFile(output / filename, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
                         archive.write(destination, destination.name)
                         for name in ('source.json', '.config', 'requested.config', 'kernel-version.json', 'kernel-source.json',
-                                     'source-patches.diff', 'legacy-build-metadata.json', 'custom-build.json', 'full-plugins.json'):
+                                     'source-patches.diff', 'legacy-build-metadata.json', 'custom-build.json', 'full-plugins.json', 'xzt8wrt-build.json'):
                             if (directory / name).is_file():
                                 archive.write(directory / name, name)
                         archive.writestr('SHA256SUMS', digest + '  ' + destination.name + '\n')

@@ -92,6 +92,7 @@ def fast(data):
     release = ROOT / 'release-output'
     release.mkdir(exist_ok=True)
     filename = f"xzt8wrt-{data['source']['version']}-{data['platform']}-{data['id']}-custom-{data['signature']}.zip"
+    shutil.copy2(overlay / 'etc/xzt8wrt-build.json', output / 'xzt8wrt-build.json')
     checksums = []
     with zipfile.ZipFile(release / filename, 'w', compression=zipfile.ZIP_STORED) as bundle:
         for item in images:
@@ -102,6 +103,7 @@ def fast(data):
             checksums.append(item['sha256'] + '  ' + path.name)
         for path in output.glob('*.manifest'):
             bundle.write(path, path.name)
+        bundle.write(output / 'xzt8wrt-build.json', 'xzt8wrt-build.json')
         bundle.writestr('custom-build.json', json.dumps(metadata, ensure_ascii=False, indent=2))
         bundle.writestr('images.json', json.dumps(images, indent=2))
         bundle.writestr('xzt8wrt-sha256sums', '\n'.join(checksums) + '\n')
@@ -111,6 +113,7 @@ def fast(data):
              'fingerprint': str(kernel['version']) + '-r' + str(kernel['release'])}}
     (output / 'custom-build.json').write_text(json.dumps(metadata, ensure_ascii=False, indent=2))
     (output / 'source.json').write_text(json.dumps(data['source']))
+    state['custom/' + data['signature']]['xzt8wrt_features'] = json.loads((output / 'xzt8wrt-build.json').read_text()).get('features', [])
     (release / 'kernel-state.json').write_text(json.dumps(state, indent=2) + '\n')
     sums = [hashlib.sha256(path.read_bytes()).hexdigest() + '  ' + path.name for path in release.glob('*.zip')]
     (release / 'SHA256SUMS').write_text('\n'.join(sums) + '\n')
