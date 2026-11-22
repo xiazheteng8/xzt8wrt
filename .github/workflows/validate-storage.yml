@@ -1,0 +1,29 @@
+name: 验证单LAN上网与扩容保护
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  storage:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: 安装分区测试工具
+        run: sudo apt-get update && sudo apt-get install -y parted e2fsprogs
+      - name: 临时loop磁盘验证在线扩容与已有分区保护
+        run: bash test-storage.sh
+  single-lan:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: 安装隔离网络测试工具
+        run: sudo apt-get update && sudo apt-get install -y build-essential libssl-dev nftables dnsmasq-base dnsutils iproute2
+      - name: 编译与官方稳定源一致的SmartDNS测试程序
+        run: |
+          curl --fail --location --retry 3 https://sources.immortalwrt.org/smartdns-48.4.tar.gz -o smartdns.tar.gz
+          echo 'b07abba99e921f262ba47588e12f5b36dd849f79c0145542440eb6b7eed80553  smartdns.tar.gz' | sha256sum -c -
+          mkdir smartdns-source
+          tar -xf smartdns.tar.gz -C smartdns-source --strip-components=1
+          make -C smartdns-source/src -j2 WITH_ZLIB=0
+      - name: 隔离namespace验证单网口物理机虚拟机的共同路由路径
+        run: sudo bash test-network.sh smartdns-source/src/smartdns

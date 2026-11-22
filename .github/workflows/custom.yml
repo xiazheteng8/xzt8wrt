@@ -101,6 +101,7 @@ jobs:
           请核对 SHA256SUMS、完整型号和引导布局。构建成功不代表已实机验证。
           标签对应发布分支，实际固件源码和组件信息保存在各 ZIP 中。
           EOF
+          python3 release_features.py release-output/kernel-state.json >> custom-notes.md
           if ! gh release view "$TAG" >/dev/null 2>&1; then
             gh release create "$TAG" --target main --title "xzt8wrt · $TAG" --notes-file custom-notes.md
           fi
