@@ -91,7 +91,6 @@ function planDNS(v, snapshot) {
   servers.forEach(function(address,i){var name='xzt_up'+(i+1);if(!(snapshot.smartServers||[]).some(function(s){return s['.name']===name;}))ops.push(['add','smartdns','server',name]);set('smartdns',name,'enabled','1');set('smartdns',name,'type','udp');set('smartdns',name,'ip',address);});
   (snapshot.smartServers||[]).filter(function(s){return /^xzt_up[1-4]$/.test(s['.name'])&&+s['.name'].slice(-1)>servers.length;}).forEach(function(s){set('smartdns',s['.name'],'enabled','0');});
   set('dhcp',dnsId,'server',['127.0.0.1#6053'].concat(servers));set('dhcp',dnsId,'noresolv','1');set('dhcp',dnsId,'strictorder','1');
-  var extra=String(main.extraconftext||'');if(!/(^|\n|\\n)fast-dns-retry(?:=|$)/.test(extra))set('dhcp',dnsId,'extraconftext',extra+(extra?'\n':'')+'fast-dns-retry=500,3000');
  }else{
   set('dhcp',dnsId,'server',servers);set('dhcp',dnsId,'noresolv','0');set('dhcp',dnsId,'strictorder','0');
  }

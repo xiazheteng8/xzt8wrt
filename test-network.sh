@@ -67,7 +67,7 @@ EOF
 ip netns exec "$r" "$SMARTDNS" -f -c "$fixture/smart.conf" -p "$fixture/smart.pid" > "$fixture/smart.stdout" 2>&1 &
 smart_pid=$!
 printf '192.168.11.2 xzt8.wrt\n' > "$fixture/hosts"
-ip netns exec "$r" dnsmasq -k --conf-file= --port=53 --listen-address=192.168.11.2,127.0.0.1 --bind-interfaces --no-hosts --no-resolv --strict-order --fast-dns-retry=500,3000 --log-facility=- --server=127.0.0.1#6053 --server=198.18.0.1#5354 --addn-hosts="$fixture/hosts" --pid-file="$fixture/dns.pid" > "$fixture/dns.log" 2>&1 &
+ip netns exec "$r" dnsmasq -k --conf-file= --port=53 --listen-address=192.168.11.2,127.0.0.1 --bind-interfaces --no-hosts --no-resolv --strict-order --log-facility=- --server=127.0.0.1#6053 --server=198.18.0.1#5354 --addn-hosts="$fixture/hosts" --pid-file="$fixture/dns.pid" > "$fixture/dns.log" 2>&1 &
 dns_pid=$!
 for attempt in {1..30}; do
  if ip netns exec "$c" curl -fsS --max-time 1 http://198.18.0.1:8080/ > "$fixture/result"; then break;fi
@@ -85,5 +85,6 @@ ip netns exec "$u" nft -j list counter ip observed forwarded | python3 -c 'impor
 printf '192.168.11.3 xzt8.wrt\n' > "$fixture/hosts";kill -HUP "$dns_pid";sleep 1
 [[ "$(ip netns exec "$c" dig +short +time=3 +tries=1 @192.168.11.2 xzt8.wrt A | tail -1)" == 192.168.11.3 ]]
 kill "$smart_pid";wait "$smart_pid" || true
-[[ "$(ip netns exec "$c" dig +short +time=10 +tries=1 @192.168.11.2 fallback.test A | tail -1)" == 198.18.0.1 ]]
+# strict-order advances on client retry, as documented by dnsmasq.
+[[ "$(ip netns exec "$c" dig +short +time=2 +tries=3 @192.168.11.2 fallback.test A | tail -1)" == 198.18.0.1 ]]
 echo 'Single-LAN client routing, return-path NAT, no redirects, DNS alias refresh, SmartDNS and fallback passed'
