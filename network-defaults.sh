@@ -43,6 +43,10 @@ uci add_list dhcp.@dnsmasq[0].server='223.5.5.5'
 uci add_list dhcp.@dnsmasq[0].server='119.29.29.29'
 uci set dhcp.@dnsmasq[0].noresolv='1'
 uci set dhcp.@dnsmasq[0].strictorder='1'
+# Retry upstreams without depending on the client's own retry policy.
+extra="$(uci -q get dhcp.@dnsmasq[0].extraconftext)"
+case "$extra" in *fast-dns-retry*) ;; *) uci set "dhcp.@dnsmasq[0].extraconftext=${extra}${extra:+
+}fast-dns-retry=500,3000";; esac
 uci commit dhcp
 /etc/init.d/smartdns enable
 /etc/init.d/smartdns start >/dev/null 2>&1

@@ -67,7 +67,7 @@ EOF
 ip netns exec "$r" "$SMARTDNS" -f -c "$fixture/smart.conf" -p "$fixture/smart.pid" > "$fixture/smart.stdout" 2>&1 &
 smart_pid=$!
 printf '192.168.11.2 xzt8.wrt\n' > "$fixture/hosts"
-ip netns exec "$r" dnsmasq -k --conf-file= --port=53 --listen-address=192.168.11.2,127.0.0.1 --bind-interfaces --no-hosts --no-resolv --strict-order --server=127.0.0.1#6053 --server=198.18.0.1#5354 --addn-hosts="$fixture/hosts" --pid-file="$fixture/dns.pid" > "$fixture/dns.log" 2>&1 &
+ip netns exec "$r" dnsmasq -k --conf-file= --port=53 --listen-address=192.168.11.2,127.0.0.1 --bind-interfaces --no-hosts --no-resolv --strict-order --fast-dns-retry=500,3000 --log-facility=- --server=127.0.0.1#6053 --server=198.18.0.1#5354 --addn-hosts="$fixture/hosts" --pid-file="$fixture/dns.pid" > "$fixture/dns.log" 2>&1 &
 dns_pid=$!
 for attempt in {1..30}; do
  if ip netns exec "$c" curl -fsS --max-time 1 http://198.18.0.1:8080/ > "$fixture/result"; then break;fi
