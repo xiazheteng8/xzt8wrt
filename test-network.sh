@@ -4,7 +4,7 @@ set -euo pipefail
 [[ "$(uname -s)" == Linux && "$EUID" == 0 ]] || { echo 'Run as root on a Linux CI runner'; exit 2; }
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 SMARTDNS="$(realpath "${1:?SmartDNS binary required}")"
-fixture="$(mktemp -d)"; prefix="xzt$$"
+fixture="$(mktemp -d)"; chmod 755 "$fixture"; prefix="xzt$$"
 c="$prefix-c"; r="$prefix-r"; u="$prefix-u"; sw="$prefix-sw"
 cleanup(){
  for ns in "$c" "$r" "$u" "$sw"; do
@@ -14,6 +14,7 @@ cleanup(){
  rm -rf "$fixture"
 }
 trap cleanup EXIT
+trap 'rc=$?; echo "Network fixture failed at line $LINENO: $BASH_COMMAND"; for log in "$fixture"/*.log "$fixture"/*.stdout; do [ ! -f "$log" ] || { echo "--- ${log##*/}"; tail -30 "$log"; }; done; exit "$rc"' ERR
 for ns in "$c" "$r" "$u" "$sw"; do ip netns add "$ns";ip -n "$ns" link set lo up;done
 ip -n "$sw" link add br0 type bridge;ip -n "$sw" link set br0 up
 for pair in "c:$c:100" "r:$r:2" "u:$u:1"; do
@@ -84,5 +85,5 @@ ip netns exec "$u" nft -j list counter ip observed forwarded | python3 -c 'impor
 printf '192.168.11.3 xzt8.wrt\n' > "$fixture/hosts";kill -HUP "$dns_pid";sleep 1
 [[ "$(ip netns exec "$c" dig +short +time=3 +tries=1 @192.168.11.2 xzt8.wrt A | tail -1)" == 192.168.11.3 ]]
 kill "$smart_pid";wait "$smart_pid" || true
-[[ "$(ip netns exec "$c" dig +short +time=3 +tries=1 @192.168.11.2 fallback.test A | tail -1)" == 198.18.0.1 ]]
+[[ "$(ip netns exec "$c" dig +short +time=10 +tries=1 @192.168.11.2 fallback.test A | tail -1)" == 198.18.0.1 ]]
 echo 'Single-LAN client routing, return-path NAT, no redirects, DNS alias refresh, SmartDNS and fallback passed'

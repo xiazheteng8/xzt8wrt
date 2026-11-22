@@ -10,6 +10,11 @@ esac
 [ "$(uci -q get smartdns.@smartdns[0].enabled)" != 1 ] || /etc/init.d/smartdns enable
 [ -z "$(uci -q show smartdns | grep '=server$')" ] || exit 0
 [ "$(uci -q get smartdns.@smartdns[0].enabled)" != 1 ] || exit 0
+# Do not replace an existing dnsmasq forwarder or a non-standard DNS listener.
+[ -z "$(uci -q get dhcp.@dnsmasq[0].server)" ] || exit 0
+port="$(uci -q get dhcp.@dnsmasq[0].port)"
+case "$port" in ''|53) ;; *) exit 0;; esac
+[ "$(uci -q get dhcp.@dnsmasq[0].noresolv)" != 1 ] || exit 0
 uci -q get smartdns.@smartdns[0] >/dev/null || uci add smartdns smartdns >/dev/null
 uci set smartdns.@smartdns[0].enabled='1'
 uci set smartdns.@smartdns[0].port='6053'

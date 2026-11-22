@@ -37,7 +37,13 @@ total="$(cat "$diskpath/size")"
 if [ "$((total-start-size))" -gt 262144 ]; then
  logger -t xzt8wrt "扩展启动盘最后的 ext4 根分区：/dev/$part"
  # --fix repairs the backup GPT after a virtual disk has been enlarged.
- parted --fix --script "/dev/$disk" resizepart "$number" 100% || { logger -t xzt8wrt '分区扩容未完成，保留现状，请在磁盘管理中检查'; exit 0; }
+ layout="$(LC_ALL=C parted --fix --script --machine "/dev/$disk" unit s print)" || exit 0
+ # Validate the on-disk table as well as the kernel's view before acknowledging use.
+ printf '%s\n' "$layout" | awk -F: -v n="$number" -v root_start="$start" '
+ $1 ~ /^[0-9]+$/ { s=$2; sub(/s$/, "", s); if($1==n) { found=1; if(s!=root_start) bad=1 } else if(s>root_start) bad=1 }
+ END { exit (bad || !found) }' || { logger -t xzt8wrt '分区表与根分区布局不符合扩容条件，跳过'; exit 0; }
+ # Only acknowledge the mounted-partition warning after the last-partition/grow-only checks.
+ printf 'Yes\n' | LC_ALL=C parted ---pretend-input-tty --fix "/dev/$disk" resizepart "$number" 100% || { logger -t xzt8wrt '分区扩容未完成，保留现状，请在磁盘管理中检查'; exit 0; }
  partprobe "/dev/$disk" 2>/dev/null || true
 fi
 # Online ext4 growth is safe when the kernel has accepted the larger partition.
