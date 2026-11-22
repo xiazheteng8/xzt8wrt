@@ -17,7 +17,7 @@ def install(output, version, platform, profile):
         path.write_text(content)
         path.chmod(mode)
     put('etc/banner',banner(version,platform,profile))
-    put('etc/xzt8wrt-build.json',json.dumps({'version':version,'platform':platform,'profile':profile,'wizard':2,'features':['single-lan-v2','smartdns-defaults-v1','admin-domain-v1','ext4-grow-v1']},ensure_ascii=False,indent=2)+'\n')
+    put('etc/xzt8wrt-build.json',json.dumps({'version':version,'platform':platform,'profile':profile,'wizard':2,'features':['single-lan-v2','smartdns-defaults-v1','admin-domain-v1'] + (['ext4-grow-v1'] if platform == 'x86' else [])},ensure_ascii=False,indent=2)+'\n')
     put('www/luci-static/resources/view/xzt8wrt/setup.js',(ROOT/'setup-wizard.js').read_text())
     put('www/index.html', '<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=/cgi-bin/luci/admin/setup"><title>xzt8wrt 设置向导</title></head><body><a href="/cgi-bin/luci/admin/setup">打开 xzt8wrt 设置向导</a></body></html>')
     menu={'admin/setup':{'title':'设置向导','order':1,'action':{'type':'view','path':'xzt8wrt/setup'},'depends':{'acl':['luci-app-xzt8wrt-setup']}}}

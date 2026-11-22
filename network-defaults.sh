@@ -40,4 +40,6 @@ uci set dhcp.@dnsmasq[0].noresolv='1'
 uci set dhcp.@dnsmasq[0].strictorder='1'
 uci commit dhcp
 /etc/init.d/smartdns enable
+/etc/init.d/smartdns start >/dev/null 2>&1
+/etc/init.d/dnsmasq reload >/dev/null 2>&1
 exit 0

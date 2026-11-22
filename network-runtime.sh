@@ -1,7 +1,8 @@
 #!/bin/sh
 # Refresh the local administration name without committing UCI during apply/rollback.
 /usr/sbin/xzt8wrt-network-policy
-address="$(uci -q get network.lan.ipaddr | awk '{split($1,a,"/");print a[1]}')"
+address="$(ubus call network.interface.lan status 2>/dev/null | jsonfilter -e '@["ipv4-address"][0].address' 2>/dev/null)"
+[ -n "$address" ] || address="$(uci -q get network.lan.ipaddr | awk '{split($1,a,"/");print a[1]}')"
 if ! printf '%s\n' "$address" | grep -Eq '^([0-9]{1,3}\.){3}[0-9]{1,3}$'; then
  exit 0
 fi
