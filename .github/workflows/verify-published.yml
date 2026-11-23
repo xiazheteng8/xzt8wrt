@@ -53,6 +53,7 @@ jobs:
           try:
               wait(rb'root@[^\r\n]+:[^\r\n]*#',240,True)
               script='''set -e
+          sleep 15
           cat /etc/banner
           grep -q 'BE FREE AND UNAFRAID' /etc/banner
           grep -q 'xzt8wrt / ImmortalWrt' /etc/banner
@@ -80,7 +81,12 @@ jobs:
           echo BOOT_BRANDING_WIZARD_DEFAULT_IP_SINGLE_NIC_PASSED
           '''
               encoded=base64.b64encode(script.encode()).decode()
-              send("printf '%s' '"+encoded+"' | base64 -d > /tmp/xzt-check; sh /tmp/xzt-check; printf '\\nXZT_RESULT:%s\\n' \"$?\"\n")
+              send("rm -f /tmp/xzt-boot.b64\n")
+              wait(rb'root@[^\r\n]+:[^\r\n]*#',30)
+              for offset in range(0,len(encoded),160):
+                  send("printf '%s' '"+encoded[offset:offset+160]+"' >> /tmp/xzt-boot.b64\n")
+                  wait(rb'root@[^\r\n]+:[^\r\n]*#',30)
+              send("base64 -d /tmp/xzt-boot.b64 > /tmp/xzt-check; sh /tmp/xzt-check; printf '\\nXZT_RESULT:%s\\n' \"$?\"\n")
               result=wait(rb'\r?\nXZT_RESULT:(\d+)\r?\n',180)
               assert result.group(1)==b'0','Guest validation failed'
           finally:

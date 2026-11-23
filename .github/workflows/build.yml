@@ -119,7 +119,8 @@ jobs:
       - name: Build or validate firmware configuration
         run: bash build.sh
         env:
-          JOBS: '2'
+          JOBS: ${{ matrix.platform == 'x86' && '4' || '2' }}
+          RUST_HOST_JOBS: ${{ matrix.platform == 'x86' && '4' || '2' }}
           PLATFORM: ${{ matrix.platform }}
           PROFILE: ${{ matrix.profile }}
           DEVICE: ${{ matrix.device || '' }}
