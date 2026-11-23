@@ -1,0 +1,96 @@
+name: 实际启动已发布x86镜像
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  boot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: 安装虚拟机验证工具
+        run: sudo apt-get update && sudo apt-get install -y qemu-system-x86 qemu-utils
+      - name: 校验并启动当前精简版，检查标志向导地址与单网口联网
+        run: |
+          python3 - <<'PY'
+          import base64, gzip, hashlib, http.server, json, os, re, select, subprocess, threading, time, urllib.request, zipfile
+          index=json.load(open('docs/downloads.json'))
+          asset=next(a for r in index['releases'] for a in r['assets'] if a['name'].endswith('x86-generic-lite-img-bios-ext4.zip'))
+          urllib.request.urlretrieve(asset['browser_download_url'],'firmware.zip')
+          digest=hashlib.sha256(open('firmware.zip','rb').read()).hexdigest()
+          assert asset['digest']=='sha256:'+digest
+          print('Verified asset:',asset['browser_download_url'],digest,flush=True)
+          with zipfile.ZipFile('firmware.zip') as z:
+              name=next(n for n in z.namelist() if n.endswith('.img.gz'))
+              with z.open(name) as f, gzip.GzipFile(fileobj=f) as image, open('firmware.img','wb') as out:
+                  import shutil
+                  shutil.copyfileobj(image,out)
+          subprocess.run(['qemu-img','resize','-f','raw','firmware.img','1G'],check=True)
+          class Fixture(http.server.BaseHTTPRequestHandler):
+              def do_GET(self):
+                  self.send_response(200);self.end_headers();self.wfile.write(b'xzt8wrt-network-ok\n')
+          server=http.server.HTTPServer(('127.0.0.1',18081),Fixture)
+          threading.Thread(target=server.serve_forever,daemon=True).start()
+          command=['qemu-system-x86_64','-accel','tcg','-m','512','-smp','2','-drive','file=firmware.img,format=raw,if=virtio','-netdev','user,id=n0,net=192.168.11.0/24,host=192.168.11.254,dns=192.168.11.253','-device','virtio-net-pci,netdev=n0','-nographic','-monitor','none','-no-reboot']
+          vm=subprocess.Popen(command,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+          log=open('boot.log','wb');buffer=b''
+          def send(value):
+              vm.stdin.write(value.encode());vm.stdin.flush()
+          def wait(pattern,timeout,activate=False):
+              global buffer
+              deadline=time.monotonic()+timeout;last=0
+              while time.monotonic()<deadline:
+                  if activate and time.monotonic()-last>5:
+                      send('\n');last=time.monotonic()
+                  if select.select([vm.stdout],[],[],1)[0]:
+                      data=os.read(vm.stdout.fileno(),65536)
+                      if not data:raise RuntimeError('VM exited')
+                      log.write(data);log.flush();print(data.decode(errors='replace'),end='',flush=True);buffer+=data
+                      match=re.search(pattern,buffer)
+                      if match:buffer=b'';return match
+              raise TimeoutError(pattern)
+          try:
+              wait(rb'root@[^\r\n]+:[^\r\n]*#',240,True)
+              script='''set -e
+          cat /etc/banner
+          grep -q 'BE FREE AND UNAFRAID' /etc/banner
+          grep -q 'xzt8wrt / ImmortalWrt' /etc/banner
+          case "$(uci -q get network.lan.ipaddr)" in 192.168.11.1|192.168.11.1/24) ;; *) echo WRONG_DEFAULT_IP; exit 1;; esac
+          test -s /www/luci-static/resources/view/xzt8wrt/setup.js
+          test -s /usr/share/luci/menu.d/luci-app-xzt8wrt-setup.json
+          test -s /usr/share/rpcd/acl.d/luci-app-xzt8wrt-setup.json
+          sleep 8
+          wget --no-check-certificate -qO /tmp/setup-page http://127.0.0.1/cgi-bin/luci/admin/setup
+          grep -Eiq 'luci|xzt8wrt' /tmp/setup-page
+          nslookup xzt8.wrt 127.0.0.1
+          uci set network.lan.gateway=192.168.11.254
+          uci -q delete network.lan.dns || true
+          uci add_list network.lan.dns=192.168.11.253
+          uci set dhcp.lan.ignore=1
+          uci commit network
+          uci commit dhcp
+          /etc/init.d/network reload
+          sleep 10
+          ip route
+          ip route | grep 'default via 192.168.11.254'
+          wget --no-check-certificate -qO /tmp/network-page http://192.168.11.254:18081/
+          grep -q xzt8wrt-network-ok /tmp/network-page
+          nslookup example.com 192.168.11.253
+          echo BOOT_BRANDING_WIZARD_DEFAULT_IP_SINGLE_NIC_PASSED
+          '''
+              encoded=base64.b64encode(script.encode()).decode()
+              send("printf '%s' '"+encoded+"' | base64 -d > /tmp/xzt-check; sh /tmp/xzt-check; printf '\\nXZT_RESULT:%s\\n' \"$?\"\n")
+              result=wait(rb'\r?\nXZT_RESULT:(\d+)\r?\n',180)
+              assert result.group(1)==b'0','Guest validation failed'
+          finally:
+              vm.terminate()
+              try:vm.wait(timeout=10)
+              except subprocess.TimeoutExpired:vm.kill();vm.wait()
+              log.close();server.shutdown()
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: actual-x86-boot-log
+          path: boot.log
