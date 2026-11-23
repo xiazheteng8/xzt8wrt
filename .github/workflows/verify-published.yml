@@ -52,7 +52,7 @@ jobs:
               raise TimeoutError(pattern)
           try:
               wait(rb'root@[^\r\n]+:[^\r\n]*#',240,True)
-              script='''set -e
+              script='''set -ex
           sleep 15
           cat /etc/banner
           grep -q 'BE FREE AND UNAFRAID' /etc/banner
@@ -62,8 +62,8 @@ jobs:
           test -s /usr/share/luci/menu.d/luci-app-xzt8wrt-setup.json
           test -s /usr/share/rpcd/acl.d/luci-app-xzt8wrt-setup.json
           sleep 8
-          wget --no-check-certificate -qO /tmp/setup-page http://127.0.0.1/cgi-bin/luci/admin/setup
-          grep -Eiq 'luci|xzt8wrt' /tmp/setup-page
+          curl -fsS -c /tmp/xzt-cookie -b /tmp/xzt-cookie -d 'luci_username=root&luci_password=' -L http://127.0.0.1/cgi-bin/luci/admin/setup -o /tmp/setup-page
+          grep -Eq 'xzt8wrt[./]setup' /tmp/setup-page
           nslookup xzt8.wrt 127.0.0.1
           uci set network.lan.gateway=192.168.11.254
           uci -q delete network.lan.dns || true
