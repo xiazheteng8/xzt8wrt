@@ -95,13 +95,14 @@ def fix_rust_host(source):
     if not makefile.exists():
         return
     text = makefile.read_text()
+    host_jobs = max(1, min(4, int(os.environ.get('RUST_HOST_JOBS', '2'))))
     old = '--set=llvm.download-ci-llvm=true'
     if old in text:
         text = text.replace(old, '--set=llvm.download-ci-llvm=false')
         marker = '$(eval $(call HostBuild))'
-        text = text.replace(marker, 'HOST_CONFIGURE_ARGS += --set=build.jobs=2 --set=llvm.link-jobs=1\n\n' + marker)
+        text = text.replace(marker, f'HOST_CONFIGURE_ARGS += --set=build.jobs={host_jobs} --set=llvm.link-jobs=1\n\n' + marker)
         makefile.write_text(text)
-        print('Rust host: build pinned LLVM locally; CI LLVM download disabled, jobs=2/link-jobs=1')
+        print(f'Rust host: build pinned LLVM locally; CI LLVM download disabled, jobs={host_jobs}/link-jobs=1')
     result = subprocess.run(['git', '-C', str(source / 'feeds/packages'), 'diff', '--', 'lang/rust/Makefile'],
                             capture_output=True, text=True, check=True)
     (source / 'source-patches.diff').write_text(result.stdout)
