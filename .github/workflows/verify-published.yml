@@ -61,7 +61,12 @@ jobs:
           test -s /www/luci-static/resources/view/xzt8wrt/setup.js
           test -s /usr/share/luci/menu.d/luci-app-xzt8wrt-setup.json
           test -s /usr/share/rpcd/acl.d/luci-app-xzt8wrt-setup.json
-          sleep 8
+          ready=0
+          for attempt in $(seq 1 90); do
+           if curl -sS --connect-timeout 1 --max-time 2 http://127.0.0.1/ -o /dev/null; then ready=1;break;fi
+           sleep 2
+          done
+          if [ "$ready" != 1 ]; then logread | tail -100;ps w;ls -l /etc/rc.d;exit 1;fi
           curl -fsS -c /tmp/xzt-cookie -b /tmp/xzt-cookie -d 'luci_username=root&luci_password=' -L http://127.0.0.1/cgi-bin/luci/admin/setup -o /tmp/setup-page
           grep -Eq 'xzt8wrt[./]setup' /tmp/setup-page
           nslookup xzt8.wrt 127.0.0.1
