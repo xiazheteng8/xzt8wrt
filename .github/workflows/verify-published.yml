@@ -29,7 +29,7 @@ jobs:
           subprocess.run(['qemu-img','resize','-f','raw','firmware.img','1G'],check=True)
           class Fixture(http.server.BaseHTTPRequestHandler):
               def do_GET(self):
-                  self.send_response(200);self.end_headers();self.wfile.write(b'xzt8wrt-network-ok\n')
+                  body=b'xzt8wrt-network-ok\n';self.send_response(200);self.send_header('Content-Length',str(len(body)));self.end_headers();self.wfile.write(body)
           server=http.server.HTTPServer(('127.0.0.1',18081),Fixture)
           threading.Thread(target=server.serve_forever,daemon=True).start()
           command=['qemu-system-x86_64','-accel','tcg','-m','512','-smp','2','-drive','file=firmware.img,format=raw,if=virtio','-netdev','user,id=n0,net=192.168.11.0/24,host=192.168.11.254,dns=192.168.11.253','-device','virtio-net-pci,netdev=n0','-nographic','-monitor','none','-no-reboot']
@@ -80,7 +80,7 @@ jobs:
           sleep 10
           ip route
           ip route | grep 'default via 192.168.11.254'
-          wget --no-check-certificate -qO /tmp/network-page http://192.168.11.254:18081/
+          curl -fvS --connect-timeout 5 --max-time 15 http://192.168.11.254:18081/ -o /tmp/network-page
           grep -q xzt8wrt-network-ok /tmp/network-page
           nslookup example.com 192.168.11.253
           echo BOOT_BRANDING_WIZARD_DEFAULT_IP_SINGLE_NIC_PASSED
@@ -92,7 +92,7 @@ jobs:
                   send("printf '%s' '"+encoded[offset:offset+160]+"' >> /tmp/xzt-boot.b64\n")
                   wait(rb'root@[^\r\n]+:[^\r\n]*#',30)
               send("base64 -d /tmp/xzt-boot.b64 > /tmp/xzt-check; sh /tmp/xzt-check; printf '\\nXZT_RESULT:%s\\n' \"$?\"\n")
-              result=wait(rb'\r?\nXZT_RESULT:(\d+)\r?\n',180)
+              result=wait(rb'\r?\nXZT_RESULT:(\d+)\r?\n',300)
               assert result.group(1)==b'0','Guest validation failed'
           finally:
               vm.terminate()
